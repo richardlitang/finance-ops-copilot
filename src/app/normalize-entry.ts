@@ -36,18 +36,36 @@ function normalizeDate(value?: string): string | undefined {
 
   const slash = trimmed.match(/^(\d{2})\/(\d{2})\/(\d{4})$/);
   if (slash) {
-    const month = slash[1];
-    const day = slash[2];
+    const first = Number.parseInt(slash[1] ?? "", 10);
+    const second = Number.parseInt(slash[2] ?? "", 10);
     const year = slash[3];
-    return `${year}-${month}-${day}`;
+    if (Number.isNaN(first) || Number.isNaN(second)) {
+      return undefined;
+    }
+    if (first > 12) {
+      return `${year}-${String(second).padStart(2, "0")}-${String(first).padStart(2, "0")}`;
+    }
+    if (second > 12) {
+      return `${year}-${String(first).padStart(2, "0")}-${String(second).padStart(2, "0")}`;
+    }
+    return `${year}-${String(first).padStart(2, "0")}-${String(second).padStart(2, "0")}`;
   }
 
   const dash = trimmed.match(/^(\d{2})-(\d{2})-(\d{4})$/);
   if (dash) {
-    const month = dash[1];
-    const day = dash[2];
+    const first = Number.parseInt(dash[1] ?? "", 10);
+    const second = Number.parseInt(dash[2] ?? "", 10);
     const year = dash[3];
-    return `${year}-${month}-${day}`;
+    if (Number.isNaN(first) || Number.isNaN(second)) {
+      return undefined;
+    }
+    if (first > 12) {
+      return `${year}-${String(second).padStart(2, "0")}-${String(first).padStart(2, "0")}`;
+    }
+    if (second > 12) {
+      return `${year}-${String(first).padStart(2, "0")}-${String(second).padStart(2, "0")}`;
+    }
+    return `${year}-${String(first).padStart(2, "0")}-${String(second).padStart(2, "0")}`;
   }
 
   return undefined;
@@ -57,7 +75,22 @@ function parseAmount(raw?: string): number {
   if (!raw) {
     return Number.NaN;
   }
-  const cleaned = raw.replace(/[,$\s]/g, "");
+  const trimmed = raw.trim();
+  const hasComma = trimmed.includes(",");
+  const hasDot = trimmed.includes(".");
+  let cleaned = trimmed.replace(/\s/g, "");
+
+  if (hasComma && hasDot) {
+    if (trimmed.lastIndexOf(",") > trimmed.lastIndexOf(".")) {
+      cleaned = cleaned.replace(/\./g, "").replace(",", ".");
+    } else {
+      cleaned = cleaned.replace(/,/g, "");
+    }
+  } else if (hasComma) {
+    cleaned = cleaned.replace(",", ".");
+  }
+
+  cleaned = cleaned.replace(/\$/g, "");
   const num = Number(cleaned);
   return Number.isNaN(num) ? Number.NaN : num;
 }
