@@ -76,6 +76,16 @@ class ImportServiceTests(unittest.TestCase):
         self.assertEqual(result.spending_events[0].confirmation_status, ConfirmationStatus.CONFIRMED)
         self.assertEqual(result.spending_events[0].source_quality, SourceQuality.STATEMENT_ONLY)
 
+    def test_import_statement_csv_routes_statement_row_warnings_to_review(self):
+        result = import_statement_csv(
+            raw_csv="date,description,merchant,amount,currency\n2026-04-19,,,15.99,EUR",
+            existing_events=[],
+            now=datetime(2026, 4, 20, 12, 0, tzinfo=timezone.utc),
+        )
+
+        self.assertEqual(result.spending_events[0].review_status, ReviewStatus.NEEDS_REVIEW)
+        self.assertIn("missing_merchant", result.evidence_records[0].warnings)
+
 
 if __name__ == "__main__":
     unittest.main()

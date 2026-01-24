@@ -4,7 +4,13 @@ import csv
 from dataclasses import dataclass
 from io import StringIO
 
-from .normalization import normalize_currency, normalize_merchant, parse_amount_minor, parse_datetime
+from .normalization import (
+    NormalizationError,
+    normalize_currency,
+    normalize_merchant,
+    parse_amount_minor,
+    parse_datetime,
+)
 
 
 @dataclass(frozen=True, slots=True)
@@ -20,13 +26,17 @@ class ParsedStatementRow:
     warnings: tuple[str, ...]
 
 
+class StatementParseError(ValueError):
+    pass
+
+
 def parse_statement_csv(raw_csv: str) -> list[ParsedStatementRow]:
     reader = csv.DictReader(StringIO(raw_csv.strip()))
     required = {"date", "description", "amount"}
     fieldnames = {name.strip().lower() for name in (reader.fieldnames or [])}
     missing = required - fieldnames
     if missing:
-        raise ValueError(f"missing statement columns: {', '.join(sorted(missing))}")
+        raise StatementParseError(f"missing statement columns: {', '.join(sorted(missing))}")
 
     parsed: list[ParsedStatementRow] = []
     for index, row in enumerate(reader, start=1):
@@ -35,7 +45,7 @@ def parse_statement_csv(raw_csv: str) -> list[ParsedStatementRow]:
         merchant_raw = (normalized_row.get("merchant") or description).strip()
         posted_raw = (normalized_row.get("posted_date") or "").strip()
         warnings: list[str] = []
-        posted_at = parse_datetime(posted_raw) if posted_raw else None
+        posted_at = _parse_row_date(posted_raw, row_index=index, column="posted_date") if posted_raw else None
 
         if not merchant_raw:
             warnings.append("missing_merchant")
@@ -44,14 +54,32 @@ def parse_statement_csv(raw_csv: str) -> list[ParsedStatementRow]:
         parsed.append(
             ParsedStatementRow(
                 row_index=index,
-                occurred_at=parse_datetime(normalized_row["date"]),
+                occurred_at=_parse_row_date(normalized_row["date"], row_index=index, column="date"),
                 posted_at=posted_at,
                 description_raw=description,
                 merchant_raw=merchant_raw,
                 merchant_normalized=normalize_merchant(merchant_raw),
-                amount_minor=parse_amount_minor(normalized_row["amount"]),
+                amount_minor=_parse_row_amount(normalized_row["amount"], row_index=index),
                 currency=normalize_currency(normalized_row.get("currency")),
                 warnings=tuple(warnings),
             )
         )
     return parsed
+
+
+def _parse_row_amount(value: str, *, row_index: int) -> int:
+    try:
+        return parse_amount_minor(value)
+    except NormalizationError as exc:
+        raise StatementParseError(
+            f"invalid statement row {row_index} column amount: {exc}"
+        ) from exc
+
+
+def _parse_row_date(value: str, *, row_index: int, column: str):
+    try:
+        return parse_datetime(value)
+    except NormalizationError as exc:
+        raise StatementParseError(
+            f"invalid statement row {row_index} column {column}: {exc}"
+        ) from exc

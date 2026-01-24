@@ -24,6 +24,16 @@ date,posted_date,description,merchant,amount,currency
         with self.assertRaises(ValueError):
             parse_statement_csv("date,description\n2026-04-17,ALDI BE")
 
+    def test_parse_statement_csv_reports_row_context_for_invalid_values(self):
+        with self.assertRaisesRegex(ValueError, r"row 2 column amount"):
+            parse_statement_csv(
+                """
+date,posted_date,description,merchant,amount,currency
+2026-04-17,2026-04-18,ALDI BE,ALDI BE,43.00,EUR
+2026-04-19,2026-04-20,Netflix,Netflix,invalid,EUR
+                """
+            )
+
 
 if __name__ == "__main__":
     unittest.main()

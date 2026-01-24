@@ -19,6 +19,14 @@ def test_receipt_text_import_endpoint_creates_event():
     assert body["evidence_link_ids"] == ["link_1"]
 
 
+def test_receipt_text_import_endpoint_rejects_blank_payload():
+    client = TestClient(create_app())
+
+    response = client.post("/api/imports/receipt-text", json={"raw_text": "   "})
+
+    assert response.status_code == 422
+
+
 def test_receipt_text_import_endpoint_is_idempotent_for_duplicate_receipts():
     client = TestClient(create_app())
     payload = {"raw_text": "ALDI\nDate: 17/04/2026\nTotal: €42,97 EUR", "filename": "aldi.txt"}
@@ -174,3 +182,40 @@ def test_statement_csv_import_endpoint_is_idempotent_for_duplicate_statements():
     assert second.json()["evidence_link_ids"] == []
     assert second.json()["match_candidate_ids"] == []
     assert len(events) == 1
+
+
+def test_statement_csv_import_endpoint_returns_422_for_missing_columns():
+    client = TestClient(create_app())
+
+    response = client.post(
+        "/api/imports/statement-csv",
+        json={"raw_csv": "date,description\n2026-04-19,Netflix"},
+    )
+
+    assert response.status_code == 422
+    assert response.json()["detail"] == "missing statement columns: amount"
+
+
+def test_statement_csv_import_endpoint_rejects_blank_payload():
+    client = TestClient(create_app())
+
+    response = client.post("/api/imports/statement-csv", json={"raw_csv": "   "})
+
+    assert response.status_code == 422
+
+
+def test_statement_csv_import_endpoint_returns_422_for_invalid_row_value():
+    client = TestClient(create_app())
+
+    response = client.post(
+        "/api/imports/statement-csv",
+        json={
+            "raw_csv": (
+                "date,description,merchant,amount,currency\n"
+                "2026-04-19,Netflix,Netflix,invalid,EUR"
+            )
+        },
+    )
+
+    assert response.status_code == 422
+    assert response.json()["detail"] == "invalid statement row 1 column amount: invalid amount: invalid"

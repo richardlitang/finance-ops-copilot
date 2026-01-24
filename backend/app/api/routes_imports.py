@@ -1,6 +1,6 @@
 from datetime import datetime, timezone
 
-from fastapi import APIRouter, Depends
+from fastapi import APIRouter, Depends, HTTPException
 
 from app.repositories import InMemoryFinanceRepository
 from app.schemas.imports import ImportResponse, ReceiptTextImportRequest, StatementCsvImportRequest
@@ -61,16 +61,19 @@ def import_statement_csv_endpoint(
     request: StatementCsvImportRequest,
     repository: InMemoryFinanceRepository = Depends(get_repository),
 ) -> ImportResponse:
-    result = import_statement_csv(
-        raw_csv=request.raw_csv,
-        filename=request.filename,
-        existing_events=repository.list_spending_events(),
-        now=datetime.now(timezone.utc),
-        source_document_id=repository.next_id("source_document"),
-        evidence_record_id_start=_id_number(repository.next_id("evidence_record")),
-        spending_event_id_start=_id_number(repository.next_id("spending_event")),
-        evidence_link_id_start=_id_number(repository.next_id("evidence_link")),
-    )
+    try:
+        result = import_statement_csv(
+            raw_csv=request.raw_csv,
+            filename=request.filename,
+            existing_events=repository.list_spending_events(),
+            now=datetime.now(timezone.utc),
+            source_document_id=repository.next_id("source_document"),
+            evidence_record_id_start=_id_number(repository.next_id("evidence_record")),
+            spending_event_id_start=_id_number(repository.next_id("spending_event")),
+            evidence_link_id_start=_id_number(repository.next_id("evidence_link")),
+        )
+    except ValueError as exc:
+        raise HTTPException(status_code=422, detail=str(exc)) from exc
     source_document = repository.save_source_document(result.source_document)
     new_evidence_ids: set[str] = set()
     evidence_records = []

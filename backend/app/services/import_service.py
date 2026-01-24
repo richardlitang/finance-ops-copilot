@@ -223,7 +223,7 @@ def import_statement_csv(
             currency=row.currency,
             direction=Direction.EXPENSE if row.amount_minor >= 0 else Direction.INCOME,
             confirmation_status=ConfirmationStatus.CONFIRMED,
-            review_status=ReviewStatus.CLEAR,
+            review_status=ReviewStatus.NEEDS_REVIEW if row.warnings else ReviewStatus.CLEAR,
             lifecycle_status=LifecycleStatus.ACTIVE,
             source_quality=SourceQuality.STATEMENT_ONLY,
             created_at=created_at,
