@@ -9,6 +9,9 @@ from app.domain import (
     EvidenceType,
     LifecycleStatus,
     ReviewStatus,
+    SourceDocument,
+    SourceDocumentStatus,
+    SourceType,
     SourceQuality,
     SpendingEvent,
 )
@@ -87,3 +90,18 @@ def test_sqlalchemy_repository_persists_receipt_import_result():
     assert events[0].amount_minor == 4297
     assert len(links) == 1
     assert links[0].evidence_record_id == result.evidence_record.id
+
+
+def test_sqlalchemy_repository_saves_and_lists_source_documents():
+    repo = repository()
+    document = SourceDocument(
+        id="src_1",
+        source_type=SourceType.RECEIPT_TEXT,
+        status=SourceDocumentStatus.PARSED,
+        created_at=NOW,
+    )
+
+    repo.save_source_document(document)
+
+    assert repo.get_source_document("src_1") == document
+    assert repo.list_source_documents() == [document]

@@ -7,6 +7,9 @@ from app.domain import (
     EvidenceType,
     LifecycleStatus,
     ReviewStatus,
+    SourceDocument,
+    SourceDocumentStatus,
+    SourceType,
     SourceQuality,
     SpendingEvent,
 )
@@ -64,3 +67,18 @@ def test_repository_lists_provisional_events():
     assert repo.list_provisional_events() == [event]
     assert repo.get_spending_event("evt_1") == event
     assert repo.find_event_by_canonical_evidence_id("missing") is None
+
+
+def test_repository_saves_and_gets_source_documents():
+    repo = InMemoryFinanceRepository()
+    document = SourceDocument(
+        id="src_1",
+        source_type=SourceType.RECEIPT_TEXT,
+        status=SourceDocumentStatus.PARSED,
+        created_at=NOW,
+    )
+
+    repo.save_source_document(document)
+
+    assert repo.get_source_document("src_1") == document
+    assert repo.list_source_documents() == [document]

@@ -1,7 +1,10 @@
 from __future__ import annotations
 
+from dataclasses import asdict
+
 from pydantic import BaseModel
 
+from app.services.google_sheets import GoogleSheetsSyncResult
 from app.services.summary import MonthlySummary
 
 
@@ -24,3 +27,13 @@ class MonthlySummaryResponse(BaseModel):
             provisional_count=summary.provisional_count,
         )
 
+
+class GoogleSheetsExportResponse(BaseModel):
+    normalized_entries: int
+    review_queue: int
+    mapping_rules: int
+    monthly_summary: int
+
+    @classmethod
+    def from_domain(cls, result: GoogleSheetsSyncResult) -> "GoogleSheetsExportResponse":
+        return cls(**asdict(result))

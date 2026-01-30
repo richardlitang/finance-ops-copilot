@@ -55,6 +55,9 @@ class InMemoryFinanceRepository:
     def get_spending_event(self, event_id: str) -> SpendingEvent | None:
         return self.spending_events.get(event_id)
 
+    def get_source_document(self, source_document_id: str) -> SourceDocument | None:
+        return self.source_documents.get(source_document_id)
+
     def get_evidence_record(self, evidence_record_id: str) -> EvidenceRecord | None:
         return self.evidence_records.get(evidence_record_id)
 
@@ -63,6 +66,9 @@ class InMemoryFinanceRepository:
 
     def list_spending_events(self) -> list[SpendingEvent]:
         return list(self.spending_events.values())
+
+    def list_source_documents(self) -> list[SourceDocument]:
+        return list(self.source_documents.values())
 
     def list_provisional_events(self) -> list[SpendingEvent]:
         return [

@@ -105,6 +105,11 @@ class SqlAlchemyFinanceRepository:
             row = session.get(SpendingEventRow, event_id)
             return spending_event_from_row(row) if row else None
 
+    def get_source_document(self, source_document_id: str) -> SourceDocument | None:
+        with self.session_factory() as session:
+            row = session.get(SourceDocumentRow, source_document_id)
+            return source_document_from_row(row) if row else None
+
     def get_evidence_record(self, evidence_record_id: str) -> EvidenceRecord | None:
         with self.session_factory() as session:
             row = session.get(EvidenceRecordRow, evidence_record_id)
@@ -119,6 +124,11 @@ class SqlAlchemyFinanceRepository:
         with self.session_factory() as session:
             rows = session.scalars(select(SpendingEventRow).order_by(SpendingEventRow.occurred_at)).all()
             return [spending_event_from_row(row) for row in rows]
+
+    def list_source_documents(self) -> list[SourceDocument]:
+        with self.session_factory() as session:
+            rows = session.scalars(select(SourceDocumentRow).order_by(SourceDocumentRow.created_at)).all()
+            return [source_document_from_row(row) for row in rows]
 
     def list_provisional_events(self) -> list[SpendingEvent]:
         return [

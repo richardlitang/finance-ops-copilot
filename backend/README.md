@@ -53,8 +53,17 @@ Available V1 endpoints:
 - `POST /api/review/matches/{match_id}/reject`
 - `GET /api/summary?month=2026-04&mode=fast`
 - `POST /api/export/csv`
+- `POST /api/export/google-sheets?month=2026-04&mode=fast`
 
 Without `FINANCE_DATABASE_URL`, the API uses in-memory storage. With `FINANCE_DATABASE_URL`, it uses the SQLAlchemy repository.
+
+Google Sheets sync is enabled when all of these are set:
+
+- `GOOGLE_SHEETS_ENABLED=true`
+- `GOOGLE_SHEETS_SPREADSHEET_ID`
+- `GOOGLE_SHEETS_SERVICE_ACCOUNT_JSON`
+
+The service account value may be inline JSON or a path to a JSON file.
 
 ## Idempotency
 

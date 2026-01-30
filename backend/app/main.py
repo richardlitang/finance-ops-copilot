@@ -12,10 +12,12 @@ from app.api.routes_review import router as review_router
 from app.api.routes_summary import router as summary_router
 from app.db import create_db_engine, create_session_factory
 from app.repositories import InMemoryFinanceRepository, SqlAlchemyFinanceRepository
+from app.services.google_sheets import build_google_sheets_gateway_from_env
 
 
 def create_app(database_url: str | None = None) -> FastAPI:
     app = FastAPI(title="Receipt-First Finance API")
+    app.state.sheets_gateway = build_google_sheets_gateway_from_env(os.environ)
     if database_url:
         engine = create_db_engine(database_url)
         session_factory: sessionmaker = create_session_factory(engine)
