@@ -113,6 +113,14 @@ node --import tsx src/cli/index.ts entry show <entry-id>
 
 Use `entry show` and `candidates entry` together when validating receipt parsing.
 
+For a one-step import plus follow-up hints:
+
+```bash
+node --import tsx src/cli/index.ts import ./path/to/receipt.txt receipt_text --show
+```
+
+This prints the created entry IDs and the exact inspection commands to run next.
+
 ## Key Docs
 
 - [Docs Index](./docs/index.md)
