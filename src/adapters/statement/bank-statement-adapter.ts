@@ -42,6 +42,9 @@ export function adaptBankStatementCsv(content: string, options?: BankAdapterOpti
     amountRaw: getAmount(row),
     currencyRaw: pick(row, ["currency"]) ?? options?.currencyHint,
     accountHint: options?.accountHint,
+    confidence: 0.9,
+    warnings: [],
+    rawText: JSON.stringify(row),
     rawRow: row
   }));
 }

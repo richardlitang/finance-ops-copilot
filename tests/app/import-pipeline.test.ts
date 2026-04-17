@@ -61,10 +61,28 @@ describe("ImportPipeline", () => {
       createdBy: "system",
       createdAt: "2026-04-17T00:00:00+00:00"
     });
+    repos.mappingRuleRepo.upsert({
+      ruleId: "rule_1_desc",
+      field: "description",
+      pattern: "SM SUPERMARKET",
+      targetCategory: "groceries",
+      priority: 9,
+      createdBy: "system",
+      createdAt: "2026-04-17T00:00:00+00:00"
+    });
+    repos.mappingRuleRepo.upsert({
+      ruleId: "rule_2_desc",
+      field: "description",
+      pattern: "FREELANCE CLIENT",
+      targetCategory: "income",
+      priority: 9,
+      createdBy: "system",
+      createdAt: "2026-04-17T00:00:00+00:00"
+    });
 
     const first = await pipeline.run(path.resolve("src/fixtures/statements/bank-sample.csv"), "bank_statement");
     expect(first.length).toBe(2);
-    expect(first[0]?.status).toBe("needs_review");
+    expect(first.every((entry) => entry.status === "normalized")).toBe(true);
 
     const second = await pipeline.run(path.resolve("src/fixtures/statements/bank-sample.csv"), "bank_statement");
     expect(second.some((entry) => entry.duplicateCheck.status === "exact_duplicate_import")).toBe(true);

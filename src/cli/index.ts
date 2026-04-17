@@ -2,12 +2,13 @@ import { runImportCommand } from "./commands/import.js";
 import { runReviewCommand } from "./commands/review.js";
 import { runExportCommand } from "./commands/export.js";
 import { runSummaryCommand } from "./commands/summary.js";
+import { runSmokeCommand } from "./commands/smoke.js";
 
 async function main(): Promise<void> {
   const [command, ...rest] = process.argv.slice(2);
 
   if (!command || command === "--help" || command === "-h") {
-    console.log("usage: copilot <import|review|export|summary> [...args]");
+    console.log("usage: copilot <import|review|export|summary|smoke> [...args]");
     return;
   }
 
@@ -25,6 +26,10 @@ async function main(): Promise<void> {
   }
   if (command === "summary") {
     await runSummaryCommand();
+    return;
+  }
+  if (command === "smoke") {
+    await runSmokeCommand();
     return;
   }
 

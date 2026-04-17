@@ -1,9 +1,14 @@
 import fs from "node:fs";
 import path from "node:path";
+import { pathToFileURL } from "node:url";
 import { createDb } from "./client.js";
 
-function runMigrations(): void {
-  const db = createDb();
+export type RunMigrationsOptions = {
+  dbPath?: string;
+};
+
+export function runMigrations(options: RunMigrationsOptions = {}): void {
+  const db = createDb(options.dbPath);
   const migrationsDir = path.resolve("src/infra/db/migrations");
   const files = fs
     .readdirSync(migrationsDir)
@@ -38,4 +43,9 @@ function runMigrations(): void {
   db.close();
 }
 
-runMigrations();
+const isDirectExecution =
+  process.argv[1] !== undefined && import.meta.url === pathToFileURL(process.argv[1]).href;
+
+if (isDirectExecution) {
+  runMigrations();
+}

@@ -13,6 +13,7 @@
     "test": "vitest run",
     "test:watch": "vitest",
     "dev": "node --import tsx src/cli/index.ts",
+    "smoke": "node --import tsx src/cli/index.ts smoke",
     "lint": "tsc -p tsconfig.json --noEmit"
   },
   "dependencies": {

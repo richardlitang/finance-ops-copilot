@@ -22,6 +22,7 @@ export class ConsoleSheetsGateway implements SheetsGateway {
 
 export type CreateRuntimeOptions = {
   env?: NodeJS.ProcessEnv;
+  dbPath?: string;
   sheetsGateway?: SheetsGateway;
   ocrPort?: OcrPort;
 };
@@ -64,7 +65,7 @@ export function createSheetsGatewayFromEnv(env: NodeJS.ProcessEnv): SheetsGatewa
 
 export function createRuntime(options: CreateRuntimeOptions = {}): CliRuntime {
   const env = options.env ?? process.env;
-  const db = createDb();
+  const db = createDb(options.dbPath);
   const documentRepo = new DocumentRepo(db);
   const entryRepo = new EntryRepo(db);
   const mappingRuleRepo = new MappingRuleRepo(db);

@@ -17,6 +17,37 @@ npm run typecheck
 npm test
 ```
 
+## Smoke Flow
+
+Run:
+
+```bash
+npm run smoke
+```
+
+What it does:
+
+- migrates a dedicated local smoke database
+- loads stable smoke mapping rules and fixtures
+- imports one PH receipt, one US receipt, one bank CSV, one credit card CSV, and one duplicate bank re-import
+- prints a concise review queue summary
+- auto-approves only `normalized` non-review entries for smoke validation
+- exports approved rows through the configured Sheets gateway
+- prints monthly summary row count
+
+Expected output shape:
+
+```text
+migrate ok db=...
+fixtures loaded rules=... imports=5
+import ph-receipt entries=1
+...
+review_queue=... exact_duplicates=... ...
+export approved=... review_queue=... auto_approved=...
+summary rows=...
+smoke ok fixtures=5 entries=... review_queue=... approved_exported=... summary_rows=...
+```
+
 ## Key Docs
 
 - [Docs Index](./docs/index.md)

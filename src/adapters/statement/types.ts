@@ -8,5 +8,8 @@ export type StatementCandidateRow = {
   amountRaw?: string;
   currencyRaw?: string;
   accountHint?: string;
+  confidence?: number;
+  warnings?: string[];
+  rawText?: string;
   rawRow: Record<string, string>;
 };
