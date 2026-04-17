@@ -1,5 +1,10 @@
 import { describe, expect, it } from "vitest";
-import { TesseractOcrPort, shouldUseTesseractOcr } from "../../../src/adapters/receipt/tesseract-ocr.js";
+import {
+  hasLocalTesseractBinary,
+  TesseractCliOcrPort,
+  TesseractOcrPort,
+  shouldUseTesseractOcr
+} from "../../../src/adapters/receipt/tesseract-ocr.js";
 
 describe("TesseractOcrPort", () => {
   it("returns trimmed text from recognize output", async () => {
@@ -19,9 +24,25 @@ describe("TesseractOcrPort", () => {
   });
 });
 
+describe("TesseractCliOcrPort", () => {
+  it("returns trimmed stdout from local tesseract binary", async () => {
+    const port = new TesseractCliOcrPort("eng", "tesseract", async () => ({
+      stdout: "  hello from cli  ",
+      stderr: ""
+    }));
+    await expect(port.extractTextFromImage("fake.jpg")).resolves.toBe("hello from cli");
+  });
+});
+
 describe("shouldUseTesseractOcr", () => {
   it("enables only when OCR_PROVIDER=tesseract", () => {
     expect(shouldUseTesseractOcr({ OCR_PROVIDER: "tesseract" })).toBe(true);
     expect(shouldUseTesseractOcr({ OCR_PROVIDER: "none" })).toBe(false);
+  });
+});
+
+describe("hasLocalTesseractBinary", () => {
+  it("returns a boolean without throwing", () => {
+    expect(typeof hasLocalTesseractBinary("tesseract")).toBe("boolean");
   });
 });

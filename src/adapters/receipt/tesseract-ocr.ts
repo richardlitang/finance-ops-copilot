@@ -1,4 +1,10 @@
+import { execFile, spawnSync } from "node:child_process";
+import { promisify } from "node:util";
 import type { OcrPort } from "./ocr-port.js";
+
+const execFileAsync = promisify(execFile);
+type ExecFileResult = { stdout: string; stderr: string };
+type ExecFileFn = (file: string, args: string[]) => Promise<ExecFileResult>;
 
 type TesseractRecognizeResult = {
   data?: {
@@ -10,7 +16,11 @@ type RecognizeFn = (filePath: string, language: string) => Promise<TesseractReco
 
 const defaultRecognize: RecognizeFn = async (filePath, language) => {
   const mod = await import("tesseract.js");
-  return mod.recognize(filePath, language);
+  const recognize = mod.default?.recognize ?? (mod as { recognize?: RecognizeFn }).recognize;
+  if (!recognize) {
+    throw new Error("tesseract.js recognize function is unavailable");
+  }
+  return recognize(filePath, language);
 };
 
 export class TesseractOcrPort implements OcrPort {
@@ -27,6 +37,28 @@ export class TesseractOcrPort implements OcrPort {
     }
     return text;
   }
+}
+
+export class TesseractCliOcrPort implements OcrPort {
+  constructor(
+    private readonly language = "eng",
+    private readonly binaryPath = "tesseract",
+    private readonly execFn: ExecFileFn = (file, args) => execFileAsync(file, args)
+  ) {}
+
+  async extractTextFromImage(filePath: string): Promise<string> {
+    const { stdout } = await this.execFn(this.binaryPath, [filePath, "stdout", "-l", this.language]);
+    const text = stdout.trim();
+    if (!text) {
+      throw new Error(`no OCR text extracted for ${filePath}`);
+    }
+    return text;
+  }
+}
+
+export function hasLocalTesseractBinary(binaryPath = "tesseract"): boolean {
+  const result = spawnSync(binaryPath, ["--version"], { stdio: "ignore" });
+  return result.status === 0;
 }
 
 export function shouldUseTesseractOcr(env: NodeJS.ProcessEnv): boolean {

@@ -12,7 +12,12 @@ import { ImportPipeline } from "../app/import-pipeline.js";
 import { ReviewService } from "../app/review-service.js";
 import { GoogleSheetsService, type SheetsGateway } from "../adapters/sheets/google-sheets-service.js";
 import { GoogleSheetsGateway, shouldUseGoogleSheetsGateway } from "../adapters/sheets/google-sheets-gateway.js";
-import { TesseractOcrPort, shouldUseTesseractOcr } from "../adapters/receipt/tesseract-ocr.js";
+import {
+  hasLocalTesseractBinary,
+  TesseractCliOcrPort,
+  TesseractOcrPort,
+  shouldUseTesseractOcr
+} from "../adapters/receipt/tesseract-ocr.js";
 import type { OcrPort } from "../adapters/receipt/ocr-port.js";
 
 export class ConsoleSheetsGateway implements SheetsGateway {
@@ -48,7 +53,15 @@ export type CliRuntime = {
 };
 
 export function createOcrPortFromEnv(env: NodeJS.ProcessEnv): OcrPort | undefined {
-  return shouldUseTesseractOcr(env) ? new TesseractOcrPort(env.OCR_LANGUAGE ?? "eng") : undefined;
+  if (!shouldUseTesseractOcr(env)) {
+    return undefined;
+  }
+
+  const language = env.OCR_LANGUAGE ?? "eng";
+  const binaryPath = env.TESSERACT_BINARY_PATH ?? "tesseract";
+  return hasLocalTesseractBinary(binaryPath)
+    ? new TesseractCliOcrPort(language, binaryPath)
+    : new TesseractOcrPort(language);
 }
 
 export function createSheetsGatewayFromEnv(env: NodeJS.ProcessEnv): SheetsGateway {

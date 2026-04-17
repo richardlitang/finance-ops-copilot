@@ -6,7 +6,7 @@ import {
   createSheetsGatewayFromEnv
 } from "../../src/cli/runtime.js";
 import { GoogleSheetsGateway } from "../../src/adapters/sheets/google-sheets-gateway.js";
-import { TesseractOcrPort } from "../../src/adapters/receipt/tesseract-ocr.js";
+import { hasLocalTesseractBinary, TesseractCliOcrPort, TesseractOcrPort } from "../../src/adapters/receipt/tesseract-ocr.js";
 import type { SheetsGateway } from "../../src/adapters/sheets/google-sheets-service.js";
 
 class CaptureSheetsGateway implements SheetsGateway {
@@ -40,7 +40,12 @@ describe("runtime gateway selection", () => {
 describe("runtime ocr selection", () => {
   it("creates tesseract ocr adapter when OCR_PROVIDER=tesseract", () => {
     const port = createOcrPortFromEnv({ OCR_PROVIDER: "tesseract", OCR_LANGUAGE: "eng" });
-    expect(port).toBeInstanceOf(TesseractOcrPort);
+    expect(port).toBeDefined();
+    if (hasLocalTesseractBinary("tesseract")) {
+      expect(port).toBeInstanceOf(TesseractCliOcrPort);
+    } else {
+      expect(port).toBeInstanceOf(TesseractOcrPort);
+    }
   });
 
   it("disables ocr adapter by default", () => {
