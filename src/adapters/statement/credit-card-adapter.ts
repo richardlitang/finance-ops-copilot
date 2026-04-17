@@ -1,4 +1,5 @@
 import { parseCsv } from "./csv-parser.js";
+import { CREDIT_CARD_HEADER_ALIASES } from "./profiles.js";
 import type { StatementCandidateRow } from "./types.js";
 
 type CardAdapterOptions = {
@@ -30,7 +31,9 @@ function amountForCardRow(row: Record<string, string>): string | undefined {
 }
 
 export function adaptCreditCardCsv(content: string, options?: CardAdapterOptions): StatementCandidateRow[] {
-  const parsed = parseCsv(content);
+  const parsed = parseCsv(content, {
+    headerAliases: CREDIT_CARD_HEADER_ALIASES
+  });
   return parsed.rows.map((row) => ({
     source: "credit_card_statement",
     transactionDateRaw: pick(row, ["transaction_date", "date", "trans_date"]),

@@ -4,8 +4,18 @@ export type ParsedCsv = {
   rows: Array<Record<string, string>>;
 };
 
-function normalizeHeader(header: string): string {
-  return header.trim().toLowerCase().replace(/\s+/g, "_");
+type ParseCsvOptions = {
+  forcedDelimiter?: string;
+  headerAliases?: Record<string, string>;
+};
+
+function normalizeHeader(header: string, headerAliases?: Record<string, string>): string {
+  const normalized = header
+    .trim()
+    .toLowerCase()
+    .replace(/[^a-z0-9]+/g, "_")
+    .replace(/^_+|_+$/g, "");
+  return headerAliases?.[normalized] ?? normalized;
 }
 
 function parseCsvLine(line: string, delimiter: string): string[] {
@@ -44,7 +54,7 @@ function detectDelimiter(headerLine: string): string {
   return semicolonCount > commaCount ? ";" : ",";
 }
 
-export function parseCsv(content: string, forcedDelimiter?: string): ParsedCsv {
+export function parseCsv(content: string, options: ParseCsvOptions = {}): ParsedCsv {
   const lines = content
     .split(/\r?\n/)
     .map((line) => line.trim())
@@ -54,9 +64,9 @@ export function parseCsv(content: string, forcedDelimiter?: string): ParsedCsv {
     return { delimiter: ",", headers: [], rows: [] };
   }
 
-  const delimiter = forcedDelimiter ?? detectDelimiter(lines[0] ?? ",");
+  const delimiter = options.forcedDelimiter ?? detectDelimiter(lines[0] ?? ",");
   const rawHeaders = parseCsvLine(lines[0] ?? "", delimiter);
-  const headers = rawHeaders.map(normalizeHeader);
+  const headers = rawHeaders.map((header) => normalizeHeader(header, options.headerAliases));
   const rows: Array<Record<string, string>> = [];
 
   for (const line of lines.slice(1)) {

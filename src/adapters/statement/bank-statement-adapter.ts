@@ -1,4 +1,5 @@
 import { parseCsv } from "./csv-parser.js";
+import { BANK_STATEMENT_HEADER_ALIASES } from "./profiles.js";
 import type { StatementCandidateRow } from "./types.js";
 
 type BankAdapterOptions = {
@@ -31,7 +32,9 @@ function getAmount(row: Record<string, string>): string | undefined {
 }
 
 export function adaptBankStatementCsv(content: string, options?: BankAdapterOptions): StatementCandidateRow[] {
-  const parsed = parseCsv(content);
+  const parsed = parseCsv(content, {
+    headerAliases: BANK_STATEMENT_HEADER_ALIASES
+  });
   return parsed.rows.map((row) => ({
     source: "bank_statement",
     transactionDateRaw: pick(row, ["date", "transaction_date", "value_date"]),
