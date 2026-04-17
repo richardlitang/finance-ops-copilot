@@ -94,6 +94,17 @@ CSV columns:
 - `priority` (optional, defaults to `50`)
 - `created_by` (optional)
 
+## Extracted Candidates
+
+Inspect raw extracted candidate fields linked to a normalized entry or source document:
+
+```bash
+node --import tsx src/cli/index.ts candidates entry <entry-id>
+node --import tsx src/cli/index.ts candidates document <document-id>
+```
+
+This is the quickest way to compare what an adapter extracted versus what the normalized entry ended up storing.
+
 ## Key Docs
 
 - [Docs Index](./docs/index.md)
