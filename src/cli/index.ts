@@ -5,12 +5,13 @@ import { runRulesCommand } from "./commands/rules.js";
 import { runSummaryCommand } from "./commands/summary.js";
 import { runSmokeCommand } from "./commands/smoke.js";
 import { runCandidatesCommand } from "./commands/candidates.js";
+import { runEntryCommand } from "./commands/entry.js";
 
 async function main(): Promise<void> {
   const [command, ...rest] = process.argv.slice(2);
 
   if (!command || command === "--help" || command === "-h") {
-    console.log("usage: copilot <import|review|rules|export|summary|smoke|candidates> [...args]");
+    console.log("usage: copilot <import|review|rules|export|summary|smoke|candidates|entry> [...args]");
     return;
   }
 
@@ -40,6 +41,10 @@ async function main(): Promise<void> {
   }
   if (command === "candidates") {
     await runCandidatesCommand(rest);
+    return;
+  }
+  if (command === "entry") {
+    await runEntryCommand(rest);
     return;
   }
 

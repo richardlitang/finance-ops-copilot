@@ -105,6 +105,14 @@ node --import tsx src/cli/index.ts candidates document <document-id>
 
 This is the quickest way to compare what an adapter extracted versus what the normalized entry ended up storing.
 
+Inspect the normalized record directly:
+
+```bash
+node --import tsx src/cli/index.ts entry show <entry-id>
+```
+
+Use `entry show` and `candidates entry` together when validating receipt parsing.
+
 ## Key Docs
 
 - [Docs Index](./docs/index.md)
