@@ -17,6 +17,23 @@ npm run typecheck
 npm test
 ```
 
+## Full Verify
+
+Run:
+
+```bash
+npm run verify
+```
+
+What it does:
+
+- runs `typecheck`
+- runs the full test suite
+- runs the production build
+- runs the local smoke flow
+
+Use this as the primary local regression check before committing.
+
 ## Smoke Flow
 
 Run:
