@@ -34,6 +34,34 @@ export const extractionMetaSchema = z.object({
 });
 export type ExtractionMeta = z.infer<typeof extractionMetaSchema>;
 
+const lineItemSchema = z.object({
+  description: z.string().min(1),
+  amount: z.number().optional()
+});
+
+export const extractedCandidateSchema = z.object({
+  candidateId: z.string().min(1),
+  documentId: z.string().min(1),
+  sourceType: z.enum(SOURCE_TYPES),
+  entryId: z.string().min(1).optional(),
+  merchantRaw: z.string().optional(),
+  descriptionRaw: z.string().optional(),
+  referenceRaw: z.string().optional(),
+  transactionDateRaw: z.string().optional(),
+  postingDateRaw: z.string().optional(),
+  amountRaw: z.string().optional(),
+  currencyRaw: z.string().optional(),
+  taxAmountRaw: z.string().optional(),
+  lineItems: z.array(lineItemSchema).default([]),
+  confidence: confidenceSchema,
+  warnings: z.array(z.string()).default([]),
+  rawText: z.string().optional(),
+  rawRowJson: z.string().optional(),
+  extractorVersion: z.string().min(1),
+  createdAt: isoDatetimeSchema
+});
+export type ExtractedCandidate = z.infer<typeof extractedCandidateSchema>;
+
 export const categoryDecisionSchema = z.object({
   suggestedCategory: z.enum(CATEGORY_VALUES),
   confidence: confidenceSchema,
@@ -87,14 +115,7 @@ export const normalizedEntrySchema = z
     baseAmount: z.number().optional(),
     baseCurrency: currencySchema.optional(),
     taxAmount: z.number().optional(),
-    lineItems: z
-      .array(
-        z.object({
-          description: z.string().min(1),
-          amount: z.number().optional()
-        })
-      )
-      .default([]),
+    lineItems: z.array(lineItemSchema).default([]),
     categoryDecision: categoryDecisionSchema,
     duplicateCheck: duplicateCheckResultSchema,
     status: z.enum(ENTRY_STATUSES),

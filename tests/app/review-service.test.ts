@@ -1,24 +1,11 @@
-import fs from "node:fs";
-import path from "node:path";
 import { afterEach, describe, expect, it } from "vitest";
-import { createDb } from "../../src/infra/db/client.js";
 import { DocumentRepo } from "../../src/infra/db/document-repo.js";
 import { EntryRepo } from "../../src/infra/db/entry-repo.js";
 import { AuditRepo } from "../../src/infra/db/audit-repo.js";
 import { AuditService } from "../../src/app/audit-service.js";
 import { ReviewService } from "../../src/app/review-service.js";
 import type { NormalizedEntry } from "../../src/domain/schemas.js";
-
-const tmpDir = path.resolve(".tmp");
-let dbPathCounter = 0;
-
-function setup() {
-  fs.mkdirSync(tmpDir, { recursive: true });
-  const dbPath = path.join(tmpDir, `review-${dbPathCounter++}.sqlite`);
-  const db = createDb(dbPath);
-  db.exec(fs.readFileSync(path.resolve("src/infra/db/migrations/001_foundation.sql"), "utf8"));
-  return { db };
-}
+import { cleanupTempDatabases, createMigratedTestDatabase } from "../helpers/test-db.js";
 
 function seedEntry(entryRepo: EntryRepo, documentRepo: DocumentRepo): NormalizedEntry {
   const now = "2026-04-17T00:00:00+00:00";
@@ -61,16 +48,12 @@ function seedEntry(entryRepo: EntryRepo, documentRepo: DocumentRepo): Normalized
 }
 
 afterEach(() => {
-  for (const file of fs.readdirSync(tmpDir)) {
-    if (file.startsWith("review-") && file.endsWith(".sqlite")) {
-      fs.rmSync(path.join(tmpDir, file), { force: true });
-    }
-  }
+  cleanupTempDatabases("review");
 });
 
 describe("ReviewService", () => {
   it("supports approve and category edit operations", () => {
-    const { db } = setup();
+    const { db } = createMigratedTestDatabase("review");
     const documentRepo = new DocumentRepo(db);
     const entryRepo = new EntryRepo(db);
     seedEntry(entryRepo, documentRepo);

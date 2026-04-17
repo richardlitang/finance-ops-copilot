@@ -5,6 +5,7 @@ import { EntryRepo } from "../infra/db/entry-repo.js";
 import { MappingRuleRepo } from "../infra/db/mapping-rule-repo.js";
 import { AuditRepo } from "../infra/db/audit-repo.js";
 import { FingerprintRepo } from "../infra/db/fingerprint-repo.js";
+import { ExtractedCandidateRepo } from "../infra/db/extracted-candidate-repo.js";
 import { IntakeService } from "../app/intake-service.js";
 import { AuditService } from "../app/audit-service.js";
 import { ImportPipeline } from "../app/import-pipeline.js";
@@ -35,6 +36,7 @@ export type CliRuntime = {
     mappingRuleRepo: MappingRuleRepo;
     auditRepo: AuditRepo;
     fingerprintRepo: FingerprintRepo;
+    extractedCandidateRepo: ExtractedCandidateRepo;
   };
   services: {
     intakeService: IntakeService;
@@ -71,6 +73,7 @@ export function createRuntime(options: CreateRuntimeOptions = {}): CliRuntime {
   const mappingRuleRepo = new MappingRuleRepo(db);
   const auditRepo = new AuditRepo(db);
   const fingerprintRepo = new FingerprintRepo(db);
+  const extractedCandidateRepo = new ExtractedCandidateRepo(db);
   const intakeService = new IntakeService(documentRepo);
   const auditService = new AuditService(auditRepo);
   const ocrPort: OcrPort | undefined = options.ocrPort ?? createOcrPortFromEnv(env);
@@ -80,6 +83,7 @@ export function createRuntime(options: CreateRuntimeOptions = {}): CliRuntime {
     entryRepo,
     fingerprintRepo,
     mappingRuleRepo,
+    extractedCandidateRepo,
     auditService,
     ocrPort
   });
@@ -89,7 +93,7 @@ export function createRuntime(options: CreateRuntimeOptions = {}): CliRuntime {
 
   return {
     db,
-    repos: { documentRepo, entryRepo, mappingRuleRepo, auditRepo, fingerprintRepo },
+    repos: { documentRepo, entryRepo, mappingRuleRepo, auditRepo, fingerprintRepo, extractedCandidateRepo },
     services: { intakeService, auditService, importPipeline, reviewService, sheetsService }
   };
 }

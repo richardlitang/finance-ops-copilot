@@ -1,14 +1,11 @@
 import fs from "node:fs";
 import path from "node:path";
 import { afterEach, describe, expect, it } from "vitest";
-import { createDb } from "../../src/infra/db/client.js";
 import { DocumentRepo } from "../../src/infra/db/document-repo.js";
 import { EntryRepo } from "../../src/infra/db/entry-repo.js";
 import { GoogleSheetsService, type SheetsGateway } from "../../src/adapters/sheets/google-sheets-service.js";
 import type { NormalizedEntry } from "../../src/domain/schemas.js";
-
-const tmpDir = path.resolve(".tmp");
-let dbPathCounter = 0;
+import { cleanupTempDatabases, createMigratedTestDatabase } from "../helpers/test-db.js";
 
 class InMemoryGateway implements SheetsGateway {
   writes: Array<{ tab: string; rows: Array<Record<string, unknown>>; keyField: string }> = [];
@@ -18,10 +15,7 @@ class InMemoryGateway implements SheetsGateway {
 }
 
 function setup() {
-  fs.mkdirSync(tmpDir, { recursive: true });
-  const dbPath = path.join(tmpDir, `e2e-sheets-${dbPathCounter++}.sqlite`);
-  const db = createDb(dbPath);
-  db.exec(fs.readFileSync(path.resolve("src/infra/db/migrations/001_foundation.sql"), "utf8"));
+  const { db } = createMigratedTestDatabase("e2e-sheets");
   return { db, entryRepo: new EntryRepo(db), documentRepo: new DocumentRepo(db) };
 }
 
@@ -80,11 +74,7 @@ function seedEntry(
 }
 
 afterEach(() => {
-  for (const file of fs.readdirSync(tmpDir)) {
-    if (file.startsWith("e2e-sheets-") && file.endsWith(".sqlite")) {
-      fs.rmSync(path.join(tmpDir, file), { force: true });
-    }
-  }
+  cleanupTempDatabases("e2e-sheets");
 });
 
 describe("E2E sheets export contract", () => {

@@ -16,6 +16,7 @@ import { routeReview } from "./review-router.js";
 import { EntryRepo } from "../infra/db/entry-repo.js";
 import { FingerprintRepo } from "../infra/db/fingerprint-repo.js";
 import { MappingRuleRepo } from "../infra/db/mapping-rule-repo.js";
+import { ExtractedCandidateRepo } from "../infra/db/extracted-candidate-repo.js";
 import { AuditService } from "./audit-service.js";
 import type { LlmCategoryPort } from "../adapters/llm/llm-port.js";
 import type { NormalizedEntry } from "../domain/schemas.js";
@@ -25,6 +26,7 @@ type ImportPipelineDeps = {
   entryRepo: EntryRepo;
   fingerprintRepo: FingerprintRepo;
   mappingRuleRepo: MappingRuleRepo;
+  extractedCandidateRepo: ExtractedCandidateRepo;
   auditService: AuditService;
   ocrPort?: OcrPort;
   llmPort?: LlmCategoryPort;
@@ -59,7 +61,9 @@ export class ImportPipeline {
     const created: NormalizedEntry[] = [];
 
     for (const candidate of candidates) {
+      const nowIso = new Date().toISOString();
       const entryId = randomUUID();
+      const candidateId = randomUUID();
       const fingerprint = buildImportFingerprint({
         rawDate: candidate.transactionDateRaw,
         rawDescription: candidate.descriptionRaw ?? candidate.merchantRaw,
@@ -114,7 +118,28 @@ export class ImportPipeline {
         reviewReasons: route.reviewReasons
       };
       this.deps.entryRepo.upsert(finalEntry);
-      this.deps.fingerprintRepo.upsert(fingerprint, entryId, new Date().toISOString());
+      this.deps.extractedCandidateRepo.insert({
+        candidateId,
+        documentId: intake.document.documentId,
+        sourceType: classifier.sourceType,
+        entryId,
+        merchantRaw: candidate.merchantRaw,
+        descriptionRaw: candidate.descriptionRaw,
+        referenceRaw: candidate.referenceRaw,
+        transactionDateRaw: candidate.transactionDateRaw,
+        postingDateRaw: candidate.postingDateRaw,
+        amountRaw: candidate.amountRaw,
+        currencyRaw: candidate.currencyRaw,
+        taxAmountRaw: candidate.taxAmountRaw,
+        lineItems: candidate.lineItems ?? [],
+        confidence: candidate.confidence ?? 0.6,
+        warnings: candidate.warnings ?? [],
+        rawText: candidate.rawText,
+        rawRowJson: candidate.rawRow ? JSON.stringify(candidate.rawRow) : undefined,
+        extractorVersion: "v1",
+        createdAt: nowIso
+      });
+      this.deps.fingerprintRepo.upsert(fingerprint, entryId, nowIso);
       this.deps.auditService.record({
         entryId,
         eventType: "entry_normalized",

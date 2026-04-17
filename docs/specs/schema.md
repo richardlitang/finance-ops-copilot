@@ -8,6 +8,8 @@ Define the single internal transaction contract used across receipts, bank state
 
 `NormalizedEntry` is the canonical record. All ingestion adapters must map into this schema before any export.
 
+`ExtractedCandidate` is the durable pre-normalization record. It preserves the raw fields an adapter extracted so normalization, mapping, and review policy can be rerun later without reparsing the original file.
+
 Required fields:
 
 - `entryId`
@@ -34,6 +36,35 @@ Important optional fields:
 - `lineItems`
 - `categoryDecision.finalCategory`
 - `duplicateCheck.relatedEntryId`
+
+## Extracted Candidate Contract
+
+Every extracted row or receipt candidate should be stored before the import is considered complete.
+
+Required fields:
+
+- `candidateId`
+- `documentId`
+- `sourceType`
+- `confidence`
+- `extractorVersion`
+- `createdAt`
+
+Important optional fields:
+
+- `entryId`
+- `merchantRaw`
+- `descriptionRaw`
+- `referenceRaw`
+- `transactionDateRaw`
+- `postingDateRaw`
+- `amountRaw`
+- `currencyRaw`
+- `taxAmountRaw`
+- `lineItems`
+- `warnings`
+- `rawText`
+- `rawRowJson`
 
 ## Status and Review Contract
 
@@ -73,6 +104,8 @@ Rules:
 ## Invariants
 
 - Every `NormalizedEntry` must link back to a `SourceDocumentRef`.
+- Every persisted `ExtractedCandidate` must link back to a `SourceDocumentRef`.
 - Raw and normalized fields must both be preservable for audits.
+- `ExtractedCandidate.entryId`, when present, must reference the normalized entry derived from that candidate.
 - Deterministic policy owns status transitions.
 - LLM outputs are suggestions only and must not bypass schema validation.

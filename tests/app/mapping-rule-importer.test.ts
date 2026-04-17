@@ -2,8 +2,8 @@ import fs from "node:fs";
 import path from "node:path";
 import { afterEach, describe, expect, it } from "vitest";
 import { loadMappingRulesFromCsv, importMappingRulesFromCsv } from "../../src/app/mapping-rule-importer.js";
-import { createDb } from "../../src/infra/db/client.js";
 import { MappingRuleRepo } from "../../src/infra/db/mapping-rule-repo.js";
+import { cleanupTempDatabases, createMigratedTestDatabase } from "../helpers/test-db.js";
 
 const tmpDir = path.resolve(".tmp");
 let fileCounter = 0;
@@ -21,6 +21,7 @@ afterEach(() => {
       fs.rmSync(path.join(tmpDir, file), { force: true });
     }
   }
+  cleanupTempDatabases("mapping-rules-db");
 });
 
 describe("loadMappingRulesFromCsv", () => {
@@ -58,9 +59,7 @@ describe("loadMappingRulesFromCsv", () => {
 
 describe("importMappingRulesFromCsv", () => {
   it("upserts rules into the repository", () => {
-    const dbPath = path.join(tmpDir, `mapping-rules-db-${fileCounter++}.sqlite`);
-    const db = createDb(dbPath);
-    db.exec(fs.readFileSync(path.resolve("src/infra/db/migrations/001_foundation.sql"), "utf8"));
+    const { db, dbPath } = createMigratedTestDatabase("mapping-rules-db");
     const repo = new MappingRuleRepo(db);
 
     const csvPath = writeTempCsv(
