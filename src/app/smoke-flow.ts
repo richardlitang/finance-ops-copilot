@@ -3,7 +3,8 @@ import path from "node:path";
 import { buildMonthlySummary } from "./monthly-summary-service.js";
 import { createRuntime, type CreateRuntimeOptions } from "../cli/runtime.js";
 import { runMigrations } from "../infra/db/migrate.js";
-import { getSmokeFixtures, getSmokeMappingRules } from "../fixtures/smoke-fixtures.js";
+import { getDefaultMappingRulesFixturePath, getSmokeFixtures } from "../fixtures/smoke-fixtures.js";
+import { importMappingRulesFromCsv } from "./mapping-rule-importer.js";
 import type { NormalizedEntry } from "../domain/schemas.js";
 
 export type SmokeFlowOptions = CreateRuntimeOptions & {
@@ -61,10 +62,12 @@ export async function runSmokeFlow(options: SmokeFlowOptions = {}): Promise<Smok
   });
 
   try {
-    for (const rule of getSmokeMappingRules()) {
-      runtime.repos.mappingRuleRepo.upsert(rule);
-    }
-    logger(`fixtures loaded rules=${getSmokeMappingRules().length} imports=${getSmokeFixtures().length}`);
+    const importedRules = importMappingRulesFromCsv(
+      getDefaultMappingRulesFixturePath(),
+      runtime.repos.mappingRuleRepo,
+      { defaultCreatedBy: "system" }
+    );
+    logger(`fixtures loaded rules=${importedRules.length} imports=${getSmokeFixtures().length}`);
 
     let importedEntryCount = 0;
     for (const fixture of getSmokeFixtures()) {

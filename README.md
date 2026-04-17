@@ -65,6 +65,35 @@ summary rows=...
 smoke ok fixtures=5 entries=... review_queue=... approved_exported=... summary_rows=...
 ```
 
+## Mapping Rules
+
+Bootstrap the default checked-in rules:
+
+```bash
+node --import tsx src/cli/index.ts rules bootstrap
+```
+
+Import a custom rules CSV:
+
+```bash
+node --import tsx src/cli/index.ts rules import ./path/to/rules.csv
+```
+
+List the current local rules:
+
+```bash
+node --import tsx src/cli/index.ts rules list
+```
+
+CSV columns:
+
+- `rule_id` (optional, deterministic ID is generated if omitted)
+- `field` (`merchant`, `description`, or `line_item`)
+- `pattern`
+- `target_category`
+- `priority` (optional, defaults to `50`)
+- `created_by` (optional)
+
 ## Key Docs
 
 - [Docs Index](./docs/index.md)

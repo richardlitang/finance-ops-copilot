@@ -1,5 +1,4 @@
 import path from "node:path";
-import type { MappingRule } from "../domain/schemas.js";
 
 export type SmokeFixture = {
   label: string;
@@ -37,61 +36,6 @@ export function getSmokeFixtures(): SmokeFixture[] {
   ];
 }
 
-export function getSmokeMappingRules(nowIso = new Date().toISOString()): MappingRule[] {
-  return [
-    {
-      ruleId: "smoke_rule_sm_supermarket",
-      field: "merchant",
-      pattern: "SM SUPERMARKET",
-      targetCategory: "groceries",
-      priority: 100,
-      createdBy: "system",
-      createdAt: nowIso
-    },
-    {
-      ruleId: "smoke_rule_sm_supermarket_desc",
-      field: "description",
-      pattern: "SM SUPERMARKET",
-      targetCategory: "groceries",
-      priority: 99,
-      createdBy: "system",
-      createdAt: nowIso
-    },
-    {
-      ruleId: "smoke_rule_whole_foods",
-      field: "merchant",
-      pattern: "WHOLE FOODS",
-      targetCategory: "groceries",
-      priority: 100,
-      createdBy: "system",
-      createdAt: nowIso
-    },
-    {
-      ruleId: "smoke_rule_spotify",
-      field: "merchant",
-      pattern: "SPOTIFY",
-      targetCategory: "subscriptions",
-      priority: 100,
-      createdBy: "system",
-      createdAt: nowIso
-    },
-    {
-      ruleId: "smoke_rule_airline",
-      field: "merchant",
-      pattern: "AIRLINE",
-      targetCategory: "travel",
-      priority: 100,
-      createdBy: "system",
-      createdAt: nowIso
-    },
-    {
-      ruleId: "smoke_rule_freelance_client",
-      field: "description",
-      pattern: "FREELANCE CLIENT",
-      targetCategory: "income",
-      priority: 100,
-      createdBy: "system",
-      createdAt: nowIso
-    }
-  ];
+export function getDefaultMappingRulesFixturePath(): string {
+  return path.resolve("src/fixtures/mapping-rules/default-mapping-rules.csv");
 }

@@ -1,0 +1,7 @@
+rule_id,field,pattern,target_category,priority,created_by
+smoke_rule_sm_supermarket,merchant,SM SUPERMARKET,groceries,100,system
+smoke_rule_sm_supermarket_desc,description,SM SUPERMARKET,groceries,99,system
+smoke_rule_whole_foods,merchant,WHOLE FOODS,groceries,100,system
+smoke_rule_spotify,merchant,SPOTIFY,subscriptions,100,system
+smoke_rule_airline,merchant,AIRLINE,travel,100,system
+smoke_rule_freelance_client,description,FREELANCE CLIENT,income,100,system
