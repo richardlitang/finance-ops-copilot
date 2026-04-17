@@ -1,0 +1,31 @@
+{
+  "name": "finance-ops-copilot",
+  "version": "0.1.0",
+  "private": true,
+  "description": "Local-first financial document normalization pipeline.",
+  "type": "module",
+  "engines": {
+    "node": ">=22"
+  },
+  "scripts": {
+    "build": "tsc -p tsconfig.json",
+    "typecheck": "tsc -p tsconfig.json --noEmit",
+    "test": "vitest run",
+    "test:watch": "vitest",
+    "dev": "node --import tsx src/cli/index.ts",
+    "lint": "tsc -p tsconfig.json --noEmit"
+  },
+  "dependencies": {
+    "better-sqlite3": "^11.8.1",
+    "googleapis": "^171.4.0",
+    "tesseract.js": "^7.0.0",
+    "zod": "^3.24.2"
+  },
+  "devDependencies": {
+    "@types/better-sqlite3": "^7.6.12",
+    "@types/node": "^22.14.1",
+    "tsx": "^4.19.3",
+    "typescript": "^5.8.3",
+    "vitest": "^3.1.1"
+  }
+}

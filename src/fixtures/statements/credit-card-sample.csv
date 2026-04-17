@@ -1,0 +1,3 @@
+transaction_date,posting_date,merchant,description,reference_number,amount,currency
+04/10/2026,04/11/2026,SPOTIFY,MONTHLY SUBSCRIPTION,CCREF1,9.99,USD
+04/12/2026,04/13/2026,AIRLINE,FLIGHT TICKET,CCREF2,180.00,USD

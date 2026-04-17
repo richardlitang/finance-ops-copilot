@@ -1,0 +1,5 @@
+SM SUPERMARKET
+Receipt No: 100223
+Date: 04/16/2026
+VAT: 21.30
+Total: 420.50 PHP
