@@ -1,5 +1,7 @@
 from __future__ import annotations
 
+from datetime import datetime, timezone
+
 from app.domain import (
     ConfirmationStatus,
     Direction,
@@ -43,7 +45,7 @@ def source_document_from_row(row: SourceDocumentRow) -> SourceDocument:
         raw_text=row.raw_text,
         file_path=row.file_path,
         fingerprint=row.fingerprint,
-        created_at=row.created_at,
+        created_at=_utc(row.created_at),
     )
 
 
@@ -74,8 +76,8 @@ def evidence_record_from_row(row: EvidenceRecordRow) -> EvidenceRecord:
         evidence_type=EvidenceType(row.evidence_type),
         merchant_raw=row.merchant_raw,
         merchant_normalized=row.merchant_normalized,
-        occurred_at=row.occurred_at,
-        posted_at=row.posted_at,
+        occurred_at=_utc(row.occurred_at),
+        posted_at=_utc(row.posted_at),
         amount_minor=row.amount_minor,
         currency=row.currency,
         description_raw=row.description_raw,
@@ -83,7 +85,7 @@ def evidence_record_from_row(row: EvidenceRecordRow) -> EvidenceRecord:
         fingerprint=row.fingerprint,
         raw_payload_json=row.raw_payload_json,
         warnings=tuple(item for item in row.warnings.splitlines() if item),
-        created_at=row.created_at,
+        created_at=_utc(row.created_at),
     )
 
 
@@ -110,8 +112,8 @@ def spending_event_to_row(value: SpendingEvent) -> SpendingEventRow:
 def spending_event_from_row(row: SpendingEventRow) -> SpendingEvent:
     return SpendingEvent(
         id=row.id,
-        occurred_at=row.occurred_at,
-        posted_at=row.posted_at,
+        occurred_at=_utc(row.occurred_at),
+        posted_at=_utc(row.posted_at),
         merchant_normalized=row.merchant_normalized,
         amount_minor=row.amount_minor,
         currency=row.currency,
@@ -122,8 +124,8 @@ def spending_event_from_row(row: SpendingEventRow) -> SpendingEvent:
         lifecycle_status=LifecycleStatus(row.lifecycle_status),
         source_quality=SourceQuality(row.source_quality),
         canonical_source_evidence_id=row.canonical_source_evidence_id,
-        created_at=row.created_at,
-        updated_at=row.updated_at,
+        created_at=_utc(row.created_at),
+        updated_at=_utc(row.updated_at),
     )
 
 
@@ -147,7 +149,7 @@ def evidence_link_from_row(row: EvidenceLinkRow) -> EvidenceLink:
         link_type=EvidenceLinkType(row.link_type),
         status=EvidenceLinkStatus(row.status),
         match_score=row.match_score,
-        created_at=row.created_at,
+        created_at=_utc(row.created_at),
     )
 
 
@@ -171,5 +173,13 @@ def match_candidate_from_row(row: MatchCandidateRow) -> MatchCandidate:
         score=row.score,
         decision=row.decision,
         reasons=tuple(item for item in row.reasons.splitlines() if item),
-        created_at=row.created_at,
+        created_at=_utc(row.created_at),
     )
+
+
+def _utc(value: datetime | None) -> datetime | None:
+    if value is None:
+        return None
+    if value.tzinfo is None:
+        return value.replace(tzinfo=timezone.utc)
+    return value
