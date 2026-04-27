@@ -57,3 +57,7 @@ class ReviewActionResponse(BaseModel):
     spending_event: SpendingEventResponse
     evidence_link: EvidenceLinkResponse | None = None
 
+
+class CategoryCorrectionRequest(BaseModel):
+    category_id: str
+    create_mapping_rule: bool = False

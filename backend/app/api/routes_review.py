@@ -2,16 +2,23 @@ from datetime import datetime, timezone
 
 from fastapi import APIRouter, Depends, HTTPException
 
+from app.domain import ReviewStatus
+from app.domain.reconciliation import apply_statement_confirmation
 from app.repositories import InMemoryFinanceRepository
 from app.schemas.events import SpendingEventResponse
-from app.schemas.review import EvidenceLinkResponse, MatchCandidateResponse, ReviewActionResponse
+from app.schemas.review import (
+    CategoryCorrectionRequest,
+    EvidenceLinkResponse,
+    MatchCandidateResponse,
+    ReviewActionResponse,
+)
+from app.services.categorization import MappingRule, PatternType
 from app.services.review_service import (
     confirm_receipt_as_manual,
     ignore_event,
     mark_event_duplicate,
     reject_match_candidate,
 )
-from app.domain.reconciliation import apply_statement_confirmation
 
 from .dependencies import get_repository
 
@@ -61,6 +68,34 @@ def ignore_review_event(
     event = _get_event_or_404(repository, event_id)
     updated = ignore_event(event, reviewed_at=datetime.now(timezone.utc))
     repository.save_spending_event(updated)
+    return ReviewActionResponse(spending_event=SpendingEventResponse.from_domain(updated))
+
+
+@router.post("/events/{event_id}/category", response_model=ReviewActionResponse)
+def correct_event_category(
+    event_id: str,
+    request: CategoryCorrectionRequest,
+    repository: InMemoryFinanceRepository = Depends(get_repository),
+) -> ReviewActionResponse:
+    event = _get_event_or_404(repository, event_id)
+    updated = event.with_updates(
+        category_id=request.category_id,
+        review_status=ReviewStatus.RESOLVED,
+        updated_at=datetime.now(timezone.utc),
+    )
+    repository.save_spending_event(updated)
+    if request.create_mapping_rule:
+        repository.save_mapping_rule(
+            MappingRule(
+                id=repository.next_id("mapping_rule"),
+                pattern=event.merchant_normalized,
+                pattern_type=PatternType.MERCHANT,
+                category_id=request.category_id,
+                priority=100,
+                created_from_review=True,
+                created_at=datetime.now(timezone.utc),
+            )
+        )
     return ReviewActionResponse(spending_event=SpendingEventResponse.from_domain(updated))
 
 

@@ -45,6 +45,26 @@ def test_mark_event_duplicate_updates_lifecycle_status():
     assert response.json()["spending_event"]["review_status"] == "resolved"
 
 
+def test_correct_event_category_can_create_future_mapping_rule():
+    client = TestClient(create_app())
+    client.post("/api/categories", json={"name": "Groceries"})
+    client.post(
+        "/api/imports/receipt-text",
+        json={"raw_text": "ALDI\nDate: 17/04/2026\nTotal: €42,97 EUR"},
+    )
+
+    response = client.post(
+        "/api/review/events/evt_1/category",
+        json={"category_id": "cat_1", "create_mapping_rule": True},
+    )
+    rules = client.get("/api/categories/rules")
+
+    assert response.status_code == 200
+    assert response.json()["spending_event"]["category_id"] == "cat_1"
+    assert rules.json()[0]["pattern"] == "Aldi"
+    assert rules.json()[0]["created_from_review"] is True
+
+
 def test_ignore_event_updates_lifecycle_status():
     client = TestClient(create_app())
     client.post(
