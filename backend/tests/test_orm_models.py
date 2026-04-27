@@ -1,7 +1,7 @@
 from sqlalchemy import inspect
 
 from app.db import Base, create_db_engine
-from app.orm import EvidenceRecordRow, SourceDocumentRow, SpendingEventRow
+from app.orm import CategoryRow, EvidenceRecordRow, SourceDocumentRow, SpendingEventRow
 
 
 def test_core_tables_are_registered_on_metadata():
@@ -21,3 +21,4 @@ def test_core_tables_create_in_sqlite():
     assert SourceDocumentRow.__tablename__ in table_names
     assert EvidenceRecordRow.__tablename__ in table_names
     assert SpendingEventRow.__tablename__ in table_names
+    assert CategoryRow.__tablename__ in table_names

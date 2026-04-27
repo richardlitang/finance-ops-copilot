@@ -87,3 +87,11 @@ class MatchCandidateRow(Base):
     decision: Mapped[str] = mapped_column(String, nullable=False)
     reasons: Mapped[str] = mapped_column(Text, nullable=False, default="")
     created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), nullable=False)
+
+
+class CategoryRow(Base):
+    __tablename__ = "categories"
+
+    id: Mapped[str] = mapped_column(String, primary_key=True)
+    name: Mapped[str] = mapped_column(String, nullable=False, unique=True)
+    created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), nullable=False)

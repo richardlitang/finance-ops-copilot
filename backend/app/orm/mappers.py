@@ -4,6 +4,7 @@ from datetime import datetime, timezone
 
 from app.domain import (
     ConfirmationStatus,
+    Category,
     Direction,
     EvidenceLink,
     EvidenceLinkStatus,
@@ -20,7 +21,14 @@ from app.domain import (
 )
 from app.domain.models import MatchCandidate
 
-from .models import EvidenceLinkRow, EvidenceRecordRow, MatchCandidateRow, SourceDocumentRow, SpendingEventRow
+from .models import (
+    CategoryRow,
+    EvidenceLinkRow,
+    EvidenceRecordRow,
+    MatchCandidateRow,
+    SourceDocumentRow,
+    SpendingEventRow,
+)
 
 
 def source_document_to_row(value: SourceDocument) -> SourceDocumentRow:
@@ -175,6 +183,14 @@ def match_candidate_from_row(row: MatchCandidateRow) -> MatchCandidate:
         reasons=tuple(item for item in row.reasons.splitlines() if item),
         created_at=_utc(row.created_at),
     )
+
+
+def category_to_row(value: Category) -> CategoryRow:
+    return CategoryRow(id=value.id, name=value.name, created_at=value.created_at)
+
+
+def category_from_row(row: CategoryRow) -> Category:
+    return Category(id=row.id, name=row.name, created_at=_utc(row.created_at))
 
 
 def _utc(value: datetime | None) -> datetime | None:
