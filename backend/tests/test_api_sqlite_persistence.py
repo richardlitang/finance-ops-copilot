@@ -28,3 +28,19 @@ def test_api_receipt_and_statement_flow_works_with_sqlite_repository(tmp_path):
     assert len(events) == 1
     assert events[0]["confirmation_status"] == "confirmed"
     assert events[0]["source_quality"] == "receipt_and_statement"
+
+
+def test_duplicate_receipt_import_does_not_duplicate_sqlite_events(tmp_path):
+    database_url = f"sqlite+pysqlite:///{tmp_path / 'finance.sqlite'}"
+    client = TestClient(create_app(database_url))
+    payload = {"raw_text": "ALDI\nDate: 17/04/2026\nTotal: €42,97 EUR"}
+
+    first = client.post("/api/imports/receipt-text", json=payload)
+    second = client.post("/api/imports/receipt-text", json=payload)
+    events = client.get("/api/events?month=2026-04").json()
+
+    assert first.status_code == 200
+    assert second.status_code == 200
+    assert second.json()["spending_event_ids"] == ["evt_1"]
+    assert second.json()["evidence_link_ids"] == []
+    assert len(events) == 1
