@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 from dataclasses import dataclass
+from datetime import datetime
 from enum import StrEnum
 
 from app.domain.models import EvidenceRecord, SpendingEvent
@@ -20,6 +21,7 @@ class MappingRule:
     category_id: str
     priority: int
     created_from_review: bool = False
+    created_at: datetime | None = None
 
 
 @dataclass(frozen=True, slots=True)

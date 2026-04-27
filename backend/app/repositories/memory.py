@@ -1,7 +1,8 @@
 from __future__ import annotations
 
-from app.domain import EvidenceLink, EvidenceRecord, SourceDocument, SpendingEvent
+from app.domain import Category, EvidenceLink, EvidenceRecord, SourceDocument, SpendingEvent
 from app.domain.models import MatchCandidate
+from app.services.categorization import MappingRule
 
 
 class InMemoryFinanceRepository:
@@ -11,6 +12,8 @@ class InMemoryFinanceRepository:
         self.spending_events: dict[str, SpendingEvent] = {}
         self.evidence_links: dict[str, EvidenceLink] = {}
         self.match_candidates: dict[str, MatchCandidate] = {}
+        self.categories: dict[str, Category] = {}
+        self.mapping_rules: dict[str, MappingRule] = {}
         self._source_by_fingerprint: dict[str, str] = {}
         self._evidence_by_fingerprint: dict[str, str] = {}
 
@@ -40,6 +43,14 @@ class InMemoryFinanceRepository:
     def save_match_candidate(self, match_candidate: MatchCandidate) -> MatchCandidate:
         self.match_candidates[match_candidate.id] = match_candidate
         return match_candidate
+
+    def save_category(self, category: Category) -> Category:
+        self.categories[category.id] = category
+        return category
+
+    def save_mapping_rule(self, mapping_rule: MappingRule) -> MappingRule:
+        self.mapping_rules[mapping_rule.id] = mapping_rule
+        return mapping_rule
 
     def get_spending_event(self, event_id: str) -> SpendingEvent | None:
         return self.spending_events.get(event_id)
@@ -76,12 +87,20 @@ class InMemoryFinanceRepository:
     def list_match_candidates(self) -> list[MatchCandidate]:
         return list(self.match_candidates.values())
 
+    def list_categories(self) -> list[Category]:
+        return list(self.categories.values())
+
+    def list_mapping_rules(self) -> list[MappingRule]:
+        return sorted(self.mapping_rules.values(), key=lambda rule: rule.priority, reverse=True)
+
     def next_id(self, entity_name: str) -> str:
         prefixes = {
             "source_document": ("src", self.source_documents),
             "evidence_record": ("ev", self.evidence_records),
             "spending_event": ("evt", self.spending_events),
             "evidence_link": ("link", self.evidence_links),
+            "category": ("cat", self.categories),
+            "mapping_rule": ("rule", self.mapping_rules),
         }
         prefix, collection = prefixes[entity_name]
         return f"{prefix}_{len(collection) + 1}"

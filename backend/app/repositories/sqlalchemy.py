@@ -4,14 +4,26 @@ from sqlalchemy import func, select
 from sqlalchemy.orm import Session, sessionmaker
 
 from app.db import Base
-from app.domain import EvidenceLink, EvidenceRecord, SourceDocument, SpendingEvent
+from app.domain import Category, EvidenceLink, EvidenceRecord, SourceDocument, SpendingEvent
 from app.domain.models import MatchCandidate
-from app.orm import EvidenceLinkRow, EvidenceRecordRow, MatchCandidateRow, SourceDocumentRow, SpendingEventRow
+from app.orm import (
+    CategoryRow,
+    EvidenceLinkRow,
+    EvidenceRecordRow,
+    MappingRuleRow,
+    MatchCandidateRow,
+    SourceDocumentRow,
+    SpendingEventRow,
+)
 from app.orm.mappers import (
+    category_from_row,
+    category_to_row,
     evidence_link_from_row,
     evidence_link_to_row,
     evidence_record_from_row,
     evidence_record_to_row,
+    mapping_rule_from_row,
+    mapping_rule_to_row,
     match_candidate_from_row,
     match_candidate_to_row,
     source_document_from_row,
@@ -19,6 +31,7 @@ from app.orm.mappers import (
     spending_event_from_row,
     spending_event_to_row,
 )
+from app.services.categorization import MappingRule
 
 
 class SqlAlchemyFinanceRepository:
@@ -75,6 +88,18 @@ class SqlAlchemyFinanceRepository:
             session.commit()
             return match_candidate
 
+    def save_category(self, category: Category) -> Category:
+        with self.session_factory() as session:
+            session.merge(category_to_row(category))
+            session.commit()
+            return category
+
+    def save_mapping_rule(self, mapping_rule: MappingRule) -> MappingRule:
+        with self.session_factory() as session:
+            session.merge(mapping_rule_to_row(mapping_rule))
+            session.commit()
+            return mapping_rule
+
     def get_spending_event(self, event_id: str) -> SpendingEvent | None:
         with self.session_factory() as session:
             row = session.get(SpendingEventRow, event_id)
@@ -112,6 +137,18 @@ class SqlAlchemyFinanceRepository:
             rows = session.scalars(select(MatchCandidateRow).order_by(MatchCandidateRow.created_at)).all()
             return [match_candidate_from_row(row) for row in rows]
 
+    def list_categories(self) -> list[Category]:
+        with self.session_factory() as session:
+            rows = session.scalars(select(CategoryRow).order_by(CategoryRow.name)).all()
+            return [category_from_row(row) for row in rows]
+
+    def list_mapping_rules(self) -> list[MappingRule]:
+        with self.session_factory() as session:
+            rows = session.scalars(
+                select(MappingRuleRow).order_by(MappingRuleRow.priority.desc())
+            ).all()
+            return [mapping_rule_from_row(row) for row in rows]
+
     def find_event_by_canonical_evidence_id(self, evidence_record_id: str) -> SpendingEvent | None:
         with self.session_factory() as session:
             row = session.scalars(
@@ -138,6 +175,8 @@ class SqlAlchemyFinanceRepository:
             "evidence_record": ("ev", EvidenceRecordRow),
             "spending_event": ("evt", SpendingEventRow),
             "evidence_link": ("link", EvidenceLinkRow),
+            "category": ("cat", CategoryRow),
+            "mapping_rule": ("rule", MappingRuleRow),
         }
         prefix, row_type = mappings[entity_name]
         with self.session_factory() as session:

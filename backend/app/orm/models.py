@@ -95,3 +95,15 @@ class CategoryRow(Base):
     id: Mapped[str] = mapped_column(String, primary_key=True)
     name: Mapped[str] = mapped_column(String, nullable=False, unique=True)
     created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), nullable=False)
+
+
+class MappingRuleRow(Base):
+    __tablename__ = "mapping_rules"
+
+    id: Mapped[str] = mapped_column(String, primary_key=True)
+    pattern: Mapped[str] = mapped_column(String, nullable=False)
+    pattern_type: Mapped[str] = mapped_column(String, nullable=False)
+    category_id: Mapped[str] = mapped_column(ForeignKey("categories.id"), nullable=False)
+    priority: Mapped[int] = mapped_column(Integer, nullable=False)
+    created_from_review: Mapped[int] = mapped_column(Integer, nullable=False, default=0)
+    created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), nullable=False)

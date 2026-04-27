@@ -20,11 +20,13 @@ from app.domain import (
     SpendingEvent,
 )
 from app.domain.models import MatchCandidate
+from app.services.categorization import MappingRule, PatternType
 
 from .models import (
     CategoryRow,
     EvidenceLinkRow,
     EvidenceRecordRow,
+    MappingRuleRow,
     MatchCandidateRow,
     SourceDocumentRow,
     SpendingEventRow,
@@ -191,6 +193,30 @@ def category_to_row(value: Category) -> CategoryRow:
 
 def category_from_row(row: CategoryRow) -> Category:
     return Category(id=row.id, name=row.name, created_at=_utc(row.created_at))
+
+
+def mapping_rule_to_row(value: MappingRule) -> MappingRuleRow:
+    return MappingRuleRow(
+        id=value.id,
+        pattern=value.pattern,
+        pattern_type=value.pattern_type.value,
+        category_id=value.category_id,
+        priority=value.priority,
+        created_from_review=1 if value.created_from_review else 0,
+        created_at=value.created_at,
+    )
+
+
+def mapping_rule_from_row(row: MappingRuleRow) -> MappingRule:
+    return MappingRule(
+        id=row.id,
+        pattern=row.pattern,
+        pattern_type=PatternType(row.pattern_type),
+        category_id=row.category_id,
+        priority=row.priority,
+        created_from_review=bool(row.created_from_review),
+        created_at=_utc(row.created_at),
+    )
 
 
 def _utc(value: datetime | None) -> datetime | None:
