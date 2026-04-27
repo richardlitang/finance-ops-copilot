@@ -1,0 +1,53 @@
+from __future__ import annotations
+
+from app.domain import EvidenceLink, EvidenceRecord, SourceDocument, SpendingEvent
+from app.domain.models import MatchCandidate
+
+
+class InMemoryFinanceRepository:
+    def __init__(self) -> None:
+        self.source_documents: dict[str, SourceDocument] = {}
+        self.evidence_records: dict[str, EvidenceRecord] = {}
+        self.spending_events: dict[str, SpendingEvent] = {}
+        self.evidence_links: dict[str, EvidenceLink] = {}
+        self.match_candidates: dict[str, MatchCandidate] = {}
+        self._source_by_fingerprint: dict[str, str] = {}
+        self._evidence_by_fingerprint: dict[str, str] = {}
+
+    def save_source_document(self, source_document: SourceDocument) -> SourceDocument:
+        if source_document.fingerprint and source_document.fingerprint in self._source_by_fingerprint:
+            return self.source_documents[self._source_by_fingerprint[source_document.fingerprint]]
+        self.source_documents[source_document.id] = source_document
+        if source_document.fingerprint:
+            self._source_by_fingerprint[source_document.fingerprint] = source_document.id
+        return source_document
+
+    def save_evidence_record(self, evidence_record: EvidenceRecord) -> EvidenceRecord:
+        if evidence_record.fingerprint in self._evidence_by_fingerprint:
+            return self.evidence_records[self._evidence_by_fingerprint[evidence_record.fingerprint]]
+        self.evidence_records[evidence_record.id] = evidence_record
+        self._evidence_by_fingerprint[evidence_record.fingerprint] = evidence_record.id
+        return evidence_record
+
+    def save_spending_event(self, spending_event: SpendingEvent) -> SpendingEvent:
+        self.spending_events[spending_event.id] = spending_event
+        return spending_event
+
+    def save_evidence_link(self, evidence_link: EvidenceLink) -> EvidenceLink:
+        self.evidence_links[evidence_link.id] = evidence_link
+        return evidence_link
+
+    def save_match_candidate(self, match_candidate: MatchCandidate) -> MatchCandidate:
+        self.match_candidates[match_candidate.id] = match_candidate
+        return match_candidate
+
+    def list_spending_events(self) -> list[SpendingEvent]:
+        return list(self.spending_events.values())
+
+    def list_provisional_events(self) -> list[SpendingEvent]:
+        return [
+            event
+            for event in self.spending_events.values()
+            if event.confirmation_status.value == "provisional"
+        ]
+
