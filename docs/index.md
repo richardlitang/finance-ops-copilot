@@ -14,3 +14,7 @@
 ## Specs
 
 - [Receipt-First PRD](./specs/receipt-first-prd.md)
+
+## Backend
+
+- [Python backend README](../backend/README.md)
