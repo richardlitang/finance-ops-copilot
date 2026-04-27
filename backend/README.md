@@ -43,5 +43,12 @@ Available V1 endpoints:
 - `GET /api/summary?month=2026-04&mode=fast`
 - `POST /api/export/csv`
 
-Current persistence is intentionally in-memory. It proves the receipt-first reconciliation model before adding SQLAlchemy persistence.
 Without `FINANCE_DATABASE_URL`, the API uses in-memory storage. With `FINANCE_DATABASE_URL`, it uses the SQLAlchemy repository.
+
+## Idempotency
+
+Receipt and statement imports are keyed by stable source and evidence fingerprints.
+
+- Re-importing the same receipt text returns the existing evidence and spending event.
+- Re-importing the same statement CSV returns existing evidence and does not create extra events, links, or match candidates.
+- Receipt-to-statement reconciliation can be rerun without duplicating the canonical spending event.

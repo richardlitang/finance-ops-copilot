@@ -126,3 +126,20 @@ Current blocker for Task 5:
 
 - FastAPI is declared in `backend/pyproject.toml`, but it is not installed in the local Python environment yet.
 - Continue with the FastAPI health endpoint after installing backend dependencies in a virtual environment.
+
+## Batch Checkpoint, Idempotency
+
+Completed import idempotency slices:
+
+- `0264e35` stabilizes receipt and statement evidence fingerprints across generated IDs.
+- `d18889b` adds repository lookups from evidence to canonical spending events.
+- `0e891e2` makes duplicate receipt imports return the existing event without creating links.
+- `477f27d` verifies duplicate receipt imports on SQLite-backed API storage.
+- `9c10226` skips duplicate statement-row evidence before creating events, links, or match candidates.
+- `8716966` verifies duplicate statement CSV imports on both in-memory and SQLite API paths.
+
+Current import idempotency behavior:
+
+- Duplicate receipt text imports do not create duplicate evidence, events, or links.
+- Duplicate statement CSV imports do not create duplicate evidence, events, links, or matches.
+- Reconciliation updates the existing receipt-created event when a new matching statement row arrives.
