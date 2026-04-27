@@ -2,6 +2,7 @@ from datetime import datetime, timezone
 
 from fastapi.testclient import TestClient
 
+from app.domain import EvidenceRecord, EvidenceType
 from app.domain.models import MatchCandidate
 from app.main import create_app
 
@@ -101,3 +102,47 @@ def test_reject_match_records_rejected_evidence_link():
     assert response.json()["status"] == "rejected"
     assert response.json()["spending_event_id"] == "evt_1"
     assert response.json()["evidence_record_id"] == "ev_1"
+
+
+def test_confirm_match_updates_event_and_links_statement_evidence():
+    app = create_app()
+    client = TestClient(app)
+    client.post(
+        "/api/imports/receipt-text",
+        json={"raw_text": "ALDI\nDate: 17/04/2026\nTotal: €42,97 EUR"},
+    )
+    app.state.repository.save_evidence_record(
+        EvidenceRecord(
+            id="ev_statement_1",
+            source_document_id="src_statement_1",
+            evidence_type=EvidenceType.STATEMENT_ROW,
+            merchant_normalized="Aldi",
+            occurred_at=datetime(2026, 4, 17, tzinfo=timezone.utc),
+            posted_at=datetime(2026, 4, 18, tzinfo=timezone.utc),
+            amount_minor=4300,
+            currency="EUR",
+            extraction_confidence=1.0,
+            fingerprint="statement-fingerprint",
+            created_at=datetime(2026, 4, 20, tzinfo=timezone.utc),
+        )
+    )
+    app.state.repository.save_match_candidate(
+        MatchCandidate(
+            id="match_1",
+            spending_event_id="evt_1",
+            statement_evidence_record_id="ev_statement_1",
+            score=72,
+            decision="needs_review",
+            reasons=("exact_amount",),
+            created_at=datetime(2026, 4, 20, tzinfo=timezone.utc),
+        )
+    )
+
+    response = client.post("/api/review/matches/match_1/confirm")
+
+    assert response.status_code == 200
+    body = response.json()
+    assert body["spending_event"]["confirmation_status"] == "confirmed"
+    assert body["spending_event"]["amount_minor"] == 4300
+    assert body["spending_event"]["source_quality"] == "receipt_and_statement"
+    assert body["evidence_link"]["status"] == "confirmed"
