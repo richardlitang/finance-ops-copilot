@@ -11,6 +11,7 @@ from app.domain import (
 )
 from app.domain.models import EvidenceRecord, SpendingEvent
 from app.domain.reconciliation import ReconciliationError, apply_statement_confirmation
+from app.domain.reconciliation import build_match_candidate, score_statement_match
 
 
 def dt(value: str) -> datetime:
@@ -119,6 +120,84 @@ class StatementConfirmationTests(unittest.TestCase):
                 matched_at=dt("2026-04-20T08:01:00"),
                 match_score=86,
             )
+
+    def test_score_statement_match_auto_confirms_exact_amount_date_and_merchant(self):
+        event = SpendingEvent(
+            id="evt_1",
+            occurred_at=dt("2026-04-17T10:00:00"),
+            merchant_normalized="Aldi",
+            amount_minor=4297,
+            currency="EUR",
+            direction=Direction.EXPENSE,
+            confirmation_status=ConfirmationStatus.PROVISIONAL,
+            review_status=ReviewStatus.CLEAR,
+            lifecycle_status=LifecycleStatus.ACTIVE,
+            source_quality=SourceQuality.RECEIPT_ONLY,
+            created_at=dt("2026-04-17T10:03:00"),
+            updated_at=dt("2026-04-17T10:03:00"),
+        )
+        statement = EvidenceRecord(
+            id="ev_statement_1",
+            source_document_id="src_statement_1",
+            evidence_type=EvidenceType.STATEMENT_ROW,
+            merchant_normalized="Aldi",
+            occurred_at=dt("2026-04-17T00:00:00"),
+            amount_minor=4297,
+            currency="EUR",
+            extraction_confidence=1.0,
+            fingerprint="statement-row-fingerprint",
+            created_at=dt("2026-04-20T08:00:00"),
+        )
+
+        score, reasons = score_statement_match(event, statement)
+        candidate = build_match_candidate(
+            candidate_id="match_1",
+            event=event,
+            statement=statement,
+            created_at=dt("2026-04-20T08:01:00"),
+        )
+
+        self.assertGreaterEqual(score, 80)
+        self.assertIn("exact_amount", reasons)
+        self.assertEqual(candidate.decision, "auto_confirm")
+
+    def test_score_statement_match_routes_medium_confidence_to_review(self):
+        event = SpendingEvent(
+            id="evt_1",
+            occurred_at=dt("2026-04-17T10:00:00"),
+            merchant_normalized="Aldi",
+            amount_minor=4297,
+            currency="EUR",
+            direction=Direction.EXPENSE,
+            confirmation_status=ConfirmationStatus.PROVISIONAL,
+            review_status=ReviewStatus.CLEAR,
+            lifecycle_status=LifecycleStatus.ACTIVE,
+            source_quality=SourceQuality.RECEIPT_ONLY,
+            created_at=dt("2026-04-17T10:03:00"),
+            updated_at=dt("2026-04-17T10:03:00"),
+        )
+        statement = EvidenceRecord(
+            id="ev_statement_1",
+            source_document_id="src_statement_1",
+            evidence_type=EvidenceType.STATEMENT_ROW,
+            merchant_normalized="Different Shop",
+            occurred_at=dt("2026-04-30T00:00:00"),
+            amount_minor=4297,
+            currency="EUR",
+            extraction_confidence=1.0,
+            fingerprint="statement-row-fingerprint",
+            created_at=dt("2026-04-20T08:00:00"),
+        )
+
+        candidate = build_match_candidate(
+            candidate_id="match_1",
+            event=event,
+            statement=statement,
+            created_at=dt("2026-04-20T08:01:00"),
+        )
+
+        self.assertEqual(candidate.score, 60)
+        self.assertEqual(candidate.decision, "needs_review")
 
 
 if __name__ == "__main__":

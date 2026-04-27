@@ -11,7 +11,7 @@ from .enums import (
     SourceType,
 )
 from .fingerprints import build_evidence_fingerprint, build_source_document_fingerprint
-from .models import EvidenceLink, EvidenceRecord, SourceDocument, SpendingEvent
+from .models import EvidenceLink, EvidenceRecord, MatchCandidate, SourceDocument, SpendingEvent
 from .reconciliation import apply_statement_confirmation
 
 __all__ = [
@@ -25,6 +25,7 @@ __all__ = [
     "EvidenceRecord",
     "EvidenceType",
     "LifecycleStatus",
+    "MatchCandidate",
     "ReviewStatus",
     "SourceDocument",
     "SourceDocumentStatus",

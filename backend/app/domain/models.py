@@ -79,3 +79,14 @@ class EvidenceLink:
     status: EvidenceLinkStatus
     created_at: datetime
     match_score: int | None = None
+
+
+@dataclass(frozen=True, slots=True)
+class MatchCandidate:
+    id: str
+    spending_event_id: str
+    statement_evidence_record_id: str
+    score: int
+    decision: str
+    reasons: tuple[str, ...]
+    created_at: datetime
