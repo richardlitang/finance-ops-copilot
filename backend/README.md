@@ -40,6 +40,12 @@ Available V1 endpoints:
 - `POST /api/imports/receipt-text`
 - `POST /api/imports/statement-csv`
 - `GET /api/events?month=2026-04`
+- `GET /api/review/matches`
+- `POST /api/review/events/{event_id}/confirm-manual`
+- `POST /api/review/events/{event_id}/duplicate`
+- `POST /api/review/events/{event_id}/ignore`
+- `POST /api/review/matches/{match_id}/confirm`
+- `POST /api/review/matches/{match_id}/reject`
 - `GET /api/summary?month=2026-04&mode=fast`
 - `POST /api/export/csv`
 
@@ -52,3 +58,12 @@ Receipt and statement imports are keyed by stable source and evidence fingerprin
 - Re-importing the same receipt text returns the existing evidence and spending event.
 - Re-importing the same statement CSV returns existing evidence and does not create extra events, links, or match candidates.
 - Receipt-to-statement reconciliation can be rerun without duplicating the canonical spending event.
+
+## Review Actions
+
+The review API keeps uncertainty explicit:
+
+- Manual confirmation turns an unmatched receipt into `manual_confirmed` spending with `source_quality = manual`.
+- Duplicate and ignored actions update `lifecycle_status` without deleting evidence.
+- Match confirmation updates the canonical spending event from statement evidence and records a confirmed evidence link.
+- Match rejection records a rejected evidence link for auditability.

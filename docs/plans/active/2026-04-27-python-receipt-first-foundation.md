@@ -143,3 +143,22 @@ Current import idempotency behavior:
 - Duplicate receipt text imports do not create duplicate evidence, events, or links.
 - Duplicate statement CSV imports do not create duplicate evidence, events, links, or matches.
 - Reconciliation updates the existing receipt-created event when a new matching statement row arrives.
+
+## Batch Checkpoint, Review API
+
+Completed review workflow slices:
+
+- `23a7dbf` adds repository lookup methods needed by review actions.
+- `722c31f` adds review response schemas.
+- `43ab65e` exposes manual cash confirmation for unmatched receipts.
+- `4cfe626` exposes duplicate and ignored lifecycle review actions.
+- `8727873` exposes medium-confidence match listing.
+- `b14475f` records rejected match links.
+- `6156093` confirms suggested matches and updates canonical spending events from statement evidence.
+- `c886d72` verifies review actions against SQLite-backed API storage.
+
+Current review behavior:
+
+- Review actions update status fields, they do not delete raw evidence.
+- Confirming a match uses the deterministic statement-confirmation service.
+- Rejecting a match creates a rejected evidence link so the decision remains auditable.
