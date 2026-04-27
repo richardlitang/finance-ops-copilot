@@ -162,3 +162,22 @@ Current review behavior:
 - Review actions update status fields, they do not delete raw evidence.
 - Confirming a match uses the deterministic statement-confirmation service.
 - Rejecting a match creates a rejected evidence link so the decision remains auditable.
+
+## Batch Checkpoint, Categories And Mapping Rules
+
+Completed categorization slices:
+
+- `1f94826` adds categories as first-class domain and ORM entities.
+- `da626d7` persists mapping rules in memory and SQL repositories.
+- `26192cc` adds Alembic migration coverage for category and mapping rule tables.
+- `3eb1c53` adds category and mapping rule API schemas.
+- `763b895` exposes category creation and listing.
+- `dfcefc8` exposes mapping rule creation and listing.
+- `d306da2` applies mapping rules during receipt imports.
+- `b0a4876` adds category correction review action with optional future rule creation.
+
+Current categorization behavior:
+
+- Deterministic mapping rules run during receipt import.
+- Review category corrections can create merchant rules for future receipts.
+- Unknown categories still remain reviewable rather than guessed silently.
