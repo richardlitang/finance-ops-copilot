@@ -1,0 +1,357 @@
+:root {
+  --ledger-paper: #eef3ef;
+  --ledger-ink: #1f2a27;
+  --ledger-muted: #5f6f69;
+  --ledger-line: rgba(31, 42, 39, 0.13);
+  --ledger-inset: #e3ebe6;
+  --ledger-panel: #fbfdfb;
+  --ledger-panel-raised: #ffffff;
+  --stamp-green: #2f6f5e;
+  --stamp-red: #9b3c34;
+  --stamp-blue: #315f7d;
+  --carbon: #29312f;
+  --focus-ring: rgba(49, 95, 125, 0.34);
+}
+
+* {
+  box-sizing: border-box;
+}
+
+body {
+  margin: 0;
+  background: var(--ledger-paper);
+  color: var(--ledger-ink);
+  font-family: ui-serif, Georgia, Cambria, "Times New Roman", Times, serif;
+}
+
+button,
+input,
+select,
+textarea {
+  font: inherit;
+}
+
+button {
+  align-items: center;
+  background: var(--carbon);
+  border: 1px solid rgba(31, 42, 39, 0.18);
+  border-radius: 6px;
+  color: #fffaf0;
+  cursor: pointer;
+  display: inline-flex;
+  min-height: 34px;
+  padding: 0 12px;
+  text-decoration: none;
+}
+
+button:disabled {
+  cursor: not-allowed;
+  opacity: 0.48;
+}
+
+button:focus-visible,
+input:focus-visible,
+select:focus-visible,
+textarea:focus-visible,
+a:focus-visible {
+  outline: 3px solid var(--focus-ring);
+  outline-offset: 2px;
+}
+
+.workspace {
+  display: grid;
+  grid-template-columns: 250px minmax(0, 1fr);
+  min-height: 100vh;
+}
+
+.rail {
+  border-right: 1px solid var(--ledger-line);
+  display: flex;
+  flex-direction: column;
+  gap: 28px;
+  padding: 28px 22px;
+}
+
+.rail h1 {
+  font-size: 26px;
+  letter-spacing: 0;
+  line-height: 1.05;
+  margin: 0;
+}
+
+.eyebrow {
+  color: var(--ledger-muted);
+  font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+  font-size: 11px;
+  letter-spacing: 0.08em;
+  margin: 0 0 8px;
+  text-transform: uppercase;
+}
+
+.tabs {
+  display: grid;
+  gap: 8px;
+}
+
+.tab,
+.ghostButton {
+  background: transparent;
+  color: var(--ledger-ink);
+}
+
+.tab {
+  justify-content: flex-start;
+  text-transform: capitalize;
+}
+
+.tab.active {
+  background: var(--carbon);
+  color: #fffaf0;
+}
+
+.railStatus {
+  align-items: center;
+  border-top: 1px solid var(--ledger-line);
+  color: var(--ledger-muted);
+  display: flex;
+  gap: 8px;
+  margin-top: auto;
+  padding-top: 18px;
+}
+
+.dot {
+  background: var(--stamp-green);
+  border-radius: 50%;
+  height: 8px;
+  width: 8px;
+}
+
+.errorText {
+  color: var(--stamp-red);
+  margin: 0;
+}
+
+.content {
+  display: grid;
+  gap: 18px;
+  grid-template-rows: auto 1fr;
+  min-width: 0;
+  padding: 24px;
+}
+
+.topbar {
+  align-items: end;
+  display: flex;
+  justify-content: space-between;
+}
+
+.monthInput,
+input[type="text"],
+select,
+textarea {
+  background: var(--ledger-inset);
+  border: 1px solid var(--ledger-line);
+  border-radius: 6px;
+  color: var(--ledger-ink);
+  padding: 9px 10px;
+}
+
+textarea {
+  min-height: 460px;
+  resize: vertical;
+  width: 100%;
+}
+
+.split,
+.evidenceGrid,
+.reviewGrid,
+.summaryGrid {
+  display: grid;
+  gap: 16px;
+}
+
+.split {
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+}
+
+.evidenceGrid {
+  grid-template-columns: minmax(0, 1.2fr) minmax(340px, 0.8fr);
+}
+
+.reviewGrid {
+  grid-template-columns: minmax(0, 1fr) minmax(0, 1fr) 320px;
+}
+
+.summaryGrid {
+  grid-template-columns: 240px 240px minmax(0, 1fr);
+}
+
+.panel {
+  background: var(--ledger-panel);
+  border: 1px solid var(--ledger-line);
+  border-radius: 8px;
+  min-width: 0;
+  padding: 16px;
+}
+
+.panelHeader {
+  align-items: center;
+  display: flex;
+  gap: 12px;
+  justify-content: space-between;
+  margin-bottom: 14px;
+}
+
+.panelHeader h2 {
+  font-size: 19px;
+  line-height: 1.1;
+  margin: 0;
+}
+
+.table,
+.stack {
+  display: grid;
+  gap: 8px;
+}
+
+.row {
+  align-items: center;
+  background: var(--ledger-panel-raised);
+  color: var(--ledger-ink);
+  display: grid;
+  gap: 12px;
+  grid-template-columns: minmax(150px, 1fr) 120px 120px 150px;
+  justify-items: start;
+  min-height: 48px;
+  text-align: left;
+}
+
+.row.selected {
+  border-color: rgba(49, 95, 125, 0.5);
+  box-shadow: inset 3px 0 0 var(--stamp-blue);
+}
+
+.pill {
+  background: rgba(102, 112, 106, 0.11);
+  border: 1px solid var(--ledger-line);
+  border-radius: 999px;
+  color: var(--ledger-muted);
+  font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+  font-size: 11px;
+  padding: 4px 8px;
+}
+
+.pill.confirmed,
+.pill.receipt-and-statement,
+.pill.resolved,
+.pill.confirmed-match {
+  background: rgba(47, 111, 94, 0.13);
+  color: var(--stamp-green);
+}
+
+.pill.provisional,
+.pill.needs-review {
+  background: rgba(49, 95, 125, 0.13);
+  color: var(--stamp-blue);
+}
+
+.reviewItem,
+.evidenceItem,
+.summaryLine,
+.matchTrace {
+  align-items: center;
+  background: var(--ledger-panel-raised);
+  border: 1px solid var(--ledger-line);
+  border-radius: 6px;
+  display: grid;
+  gap: 10px;
+  padding: 10px;
+}
+
+.reviewItem {
+  grid-template-columns: minmax(0, 1fr) auto auto auto;
+}
+
+.evidenceItem {
+  grid-template-columns: minmax(0, 1fr) auto auto;
+}
+
+.reviewItem p,
+.evidenceItem p,
+.matchTrace p {
+  color: var(--ledger-muted);
+  margin: 4px 0 0;
+}
+
+.plainSelect {
+  background: transparent;
+  border-color: transparent;
+  color: var(--ledger-ink);
+  justify-content: flex-start;
+  padding: 0;
+}
+
+.score {
+  background: var(--ledger-inset);
+  border-radius: 6px;
+  font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+  padding: 7px 9px;
+}
+
+.categoryPanel {
+  align-content: start;
+  display: grid;
+  gap: 12px;
+}
+
+.checkLine {
+  align-items: center;
+  display: flex;
+  gap: 8px;
+}
+
+.inlineCreate {
+  display: grid;
+  gap: 8px;
+  grid-template-columns: minmax(0, 1fr) auto;
+}
+
+.metricPanel {
+  align-content: center;
+  display: grid;
+  min-height: 150px;
+}
+
+.metricPanel strong {
+  font-size: 34px;
+  line-height: 1;
+}
+
+.summaryLine {
+  grid-template-columns: minmax(0, 1fr) auto;
+}
+
+@media (max-width: 1100px) {
+  .workspace {
+    grid-template-columns: 1fr;
+  }
+
+  .rail {
+    border-bottom: 1px solid var(--ledger-line);
+    border-right: 0;
+  }
+
+  .tabs,
+  .split,
+  .evidenceGrid,
+  .reviewGrid,
+  .summaryGrid {
+    grid-template-columns: 1fr;
+  }
+
+  .row,
+  .reviewItem,
+  .evidenceItem {
+    grid-template-columns: 1fr;
+  }
+}

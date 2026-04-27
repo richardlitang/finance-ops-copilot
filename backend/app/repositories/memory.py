@@ -87,6 +87,9 @@ class InMemoryFinanceRepository:
     def list_match_candidates(self) -> list[MatchCandidate]:
         return list(self.match_candidates.values())
 
+    def list_evidence_links(self) -> list[EvidenceLink]:
+        return list(self.evidence_links.values())
+
     def list_categories(self) -> list[Category]:
         return list(self.categories.values())
 

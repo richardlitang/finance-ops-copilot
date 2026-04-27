@@ -23,7 +23,7 @@ FastAPI is exposed as `app.main:app`.
 
 ```bash
 cd backend
-.venv/bin/fastapi dev app/main.py
+.venv/bin/python -m uvicorn app.main:app --reload
 ```
 
 For SQLite persistence:
@@ -31,7 +31,7 @@ For SQLite persistence:
 ```bash
 cd backend
 FINANCE_DATABASE_URL=sqlite+pysqlite:///./finance.sqlite .venv/bin/alembic upgrade head
-FINANCE_DATABASE_URL=sqlite+pysqlite:///./finance.sqlite .venv/bin/fastapi dev app/main.py
+FINANCE_DATABASE_URL=sqlite+pysqlite:///./finance.sqlite .venv/bin/python -m uvicorn app.main:app --reload
 ```
 
 Available V1 endpoints:
