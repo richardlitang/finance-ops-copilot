@@ -21,10 +21,10 @@ def import_receipt_text_endpoint(
         raw_text=request.raw_text,
         filename=request.filename,
         now=datetime.now(timezone.utc),
-        source_document_id=f"src_{len(repository.source_documents) + 1}",
-        evidence_record_id=f"ev_{len(repository.evidence_records) + 1}",
-        spending_event_id=f"evt_{len(repository.spending_events) + 1}",
-        evidence_link_id=f"link_{len(repository.evidence_links) + 1}",
+        source_document_id=repository.next_id("source_document"),
+        evidence_record_id=repository.next_id("evidence_record"),
+        spending_event_id=repository.next_id("spending_event"),
+        evidence_link_id=repository.next_id("evidence_link"),
     )
     source_document = repository.save_source_document(result.source_document)
     evidence_record = repository.save_evidence_record(result.evidence_record)
@@ -48,7 +48,7 @@ def import_statement_csv_endpoint(
         filename=request.filename,
         existing_events=repository.list_spending_events(),
         now=datetime.now(timezone.utc),
-        source_document_id=f"src_{len(repository.source_documents) + 1}",
+        source_document_id=repository.next_id("source_document"),
     )
     source_document = repository.save_source_document(result.source_document)
     evidence_records = [repository.save_evidence_record(record) for record in result.evidence_records]

@@ -1,6 +1,6 @@
 from __future__ import annotations
 
-from sqlalchemy import select
+from sqlalchemy import func, select
 from sqlalchemy.orm import Session, sessionmaker
 
 from app.db import Base
@@ -96,3 +96,15 @@ class SqlAlchemyFinanceRepository:
         with self.session_factory() as session:
             rows = session.scalars(select(MatchCandidateRow).order_by(MatchCandidateRow.created_at)).all()
             return [match_candidate_from_row(row) for row in rows]
+
+    def next_id(self, entity_name: str) -> str:
+        mappings = {
+            "source_document": ("src", SourceDocumentRow),
+            "evidence_record": ("ev", EvidenceRecordRow),
+            "spending_event": ("evt", SpendingEventRow),
+            "evidence_link": ("link", EvidenceLinkRow),
+        }
+        prefix, row_type = mappings[entity_name]
+        with self.session_factory() as session:
+            count = session.scalar(select(func.count()).select_from(row_type))
+        return f"{prefix}_{(count or 0) + 1}"

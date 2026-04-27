@@ -51,3 +51,12 @@ class InMemoryFinanceRepository:
             if event.confirmation_status.value == "provisional"
         ]
 
+    def next_id(self, entity_name: str) -> str:
+        prefixes = {
+            "source_document": ("src", self.source_documents),
+            "evidence_record": ("ev", self.evidence_records),
+            "spending_event": ("evt", self.spending_events),
+            "evidence_link": ("link", self.evidence_links),
+        }
+        prefix, collection = prefixes[entity_name]
+        return f"{prefix}_{len(collection) + 1}"
