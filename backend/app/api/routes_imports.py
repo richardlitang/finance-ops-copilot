@@ -73,9 +73,7 @@ def import_statement_csv_endpoint(
 
     spending_events = []
     for event in result.spending_events:
-        if event.canonical_source_evidence_id in new_evidence_ids or event.id in {
-            existing.id for existing in repository.list_spending_events()
-        }:
+        if event.canonical_source_evidence_id in new_evidence_ids:
             spending_events.append(repository.save_spending_event(event))
 
     evidence_links = [

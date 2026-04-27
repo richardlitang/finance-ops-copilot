@@ -75,3 +75,24 @@ def test_statement_csv_import_endpoint_confirms_matching_receipt_event():
     assert len(events) == 1
     assert events[0]["confirmation_status"] == "confirmed"
     assert events[0]["source_quality"] == "receipt_and_statement"
+
+
+def test_statement_csv_import_endpoint_is_idempotent_for_duplicate_statements():
+    client = TestClient(create_app())
+    payload = {
+        "raw_csv": (
+            "date,posted_date,description,merchant,amount,currency\n"
+            "2026-04-19,2026-04-20,Netflix,Netflix,15.99,EUR"
+        )
+    }
+
+    first = client.post("/api/imports/statement-csv", json=payload)
+    second = client.post("/api/imports/statement-csv", json=payload)
+    events = client.get("/api/events?month=2026-04").json()
+
+    assert first.status_code == 200
+    assert second.status_code == 200
+    assert second.json()["spending_event_ids"] == []
+    assert second.json()["evidence_link_ids"] == []
+    assert second.json()["match_candidate_ids"] == []
+    assert len(events) == 1
