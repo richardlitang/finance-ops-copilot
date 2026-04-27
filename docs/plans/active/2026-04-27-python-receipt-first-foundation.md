@@ -107,3 +107,22 @@ python3 -m pytest backend/tests
 ```
 
 **Commit:** `feat(backend): add fastapi health endpoint`
+
+## Batch Checkpoint, 2026-04-27
+
+Completed backend core slices:
+
+- `389b892` added deterministic money, date, currency, and merchant normalization.
+- `4353a94` added deterministic receipt text parsing.
+- `002e2e9` creates source documents, receipt evidence, provisional events, and evidence links from receipt text.
+- `70e7d35` added priority-ordered mapping rules for categorization.
+- `9cabce6` added the narrow V1 statement CSV profile.
+- `63789bd` added match scoring and match candidates.
+- `9a6445f` imports statement rows, auto-confirms high-confidence matches, and creates statement-only events.
+- `634b439` added review actions for manual cash confirmation, duplicate, ignored, and rejected matches.
+- `f96852d` added fast and conservative monthly summaries plus CSV export.
+
+Current blocker for Task 5:
+
+- FastAPI is declared in `backend/pyproject.toml`, but it is not installed in the local Python environment yet.
+- Continue with the FastAPI health endpoint after installing backend dependencies in a virtual environment.
