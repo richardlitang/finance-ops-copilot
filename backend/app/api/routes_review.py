@@ -4,8 +4,13 @@ from fastapi import APIRouter, Depends, HTTPException
 
 from app.repositories import InMemoryFinanceRepository
 from app.schemas.events import SpendingEventResponse
-from app.schemas.review import MatchCandidateResponse, ReviewActionResponse
-from app.services.review_service import confirm_receipt_as_manual, ignore_event, mark_event_duplicate
+from app.schemas.review import EvidenceLinkResponse, MatchCandidateResponse, ReviewActionResponse
+from app.services.review_service import (
+    confirm_receipt_as_manual,
+    ignore_event,
+    mark_event_duplicate,
+    reject_match_candidate,
+)
 
 from .dependencies import get_repository
 
@@ -56,6 +61,19 @@ def ignore_review_event(
     updated = ignore_event(event, reviewed_at=datetime.now(timezone.utc))
     repository.save_spending_event(updated)
     return ReviewActionResponse(spending_event=SpendingEventResponse.from_domain(updated))
+
+
+@router.post("/matches/{match_id}/reject", response_model=EvidenceLinkResponse)
+def reject_match(
+    match_id: str,
+    repository: InMemoryFinanceRepository = Depends(get_repository),
+) -> EvidenceLinkResponse:
+    candidate = repository.get_match_candidate(match_id)
+    if candidate is None:
+        raise HTTPException(status_code=404, detail="match candidate not found")
+    link = reject_match_candidate(candidate, reviewed_at=datetime.now(timezone.utc))
+    repository.save_evidence_link(link)
+    return EvidenceLinkResponse.from_domain(link)
 
 
 def _get_event_or_404(repository: InMemoryFinanceRepository, event_id: str):

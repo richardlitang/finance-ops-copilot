@@ -78,3 +78,26 @@ def test_list_review_matches_returns_medium_confidence_candidates():
     assert response.status_code == 200
     assert response.json()[0]["id"] == "match_1"
     assert response.json()[0]["reasons"] == ["exact_amount"]
+
+
+def test_reject_match_records_rejected_evidence_link():
+    app = create_app()
+    app.state.repository.save_match_candidate(
+        MatchCandidate(
+            id="match_1",
+            spending_event_id="evt_1",
+            statement_evidence_record_id="ev_1",
+            score=72,
+            decision="needs_review",
+            reasons=("exact_amount",),
+            created_at=datetime(2026, 4, 20, tzinfo=timezone.utc),
+        )
+    )
+    client = TestClient(app)
+
+    response = client.post("/api/review/matches/match_1/reject")
+
+    assert response.status_code == 200
+    assert response.json()["status"] == "rejected"
+    assert response.json()["spending_event_id"] == "evt_1"
+    assert response.json()["evidence_record_id"] == "ev_1"
