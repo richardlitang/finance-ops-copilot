@@ -32,6 +32,20 @@ class ImportServiceTests(unittest.TestCase):
         self.assertEqual(result.spending_event.review_status, ReviewStatus.NEEDS_REVIEW)
         self.assertIn("missing_total", result.evidence_record.warnings)
 
+    def test_import_receipt_text_uses_stable_evidence_fingerprint_across_generated_ids(self):
+        first = import_receipt_text(
+            raw_text="ALDI BE\nDate: 17/04/2026\nTotal: €42,97 EUR",
+            source_document_id="src_1",
+            evidence_record_id="ev_1",
+        )
+        second = import_receipt_text(
+            raw_text="ALDI BE\nDate: 17/04/2026\nTotal: €42,97 EUR",
+            source_document_id="src_2",
+            evidence_record_id="ev_2",
+        )
+
+        self.assertEqual(first.evidence_record.fingerprint, second.evidence_record.fingerprint)
+
     def test_import_statement_csv_auto_confirms_existing_receipt_event(self):
         receipt = import_receipt_text(
             raw_text="ALDI\nDate: 17/04/2026\nTotal: €42,97 EUR",

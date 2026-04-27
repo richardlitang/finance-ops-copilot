@@ -73,7 +73,7 @@ def import_receipt_text(
         created_at=created_at,
     )
     evidence_fingerprint = build_evidence_fingerprint(
-        source_document_id=source_document.id,
+        source_document_id=source_fingerprint,
         evidence_type=EvidenceType.RECEIPT,
         fields={
             "merchant_raw": parsed.merchant_raw,
@@ -146,6 +146,7 @@ def import_statement_csv(
         ),
         created_at=created_at,
     )
+    source_fingerprint = source_document.fingerprint or source_document.id
 
     evidence_records: list[EvidenceRecord] = []
     spending_events: list[SpendingEvent] = list(existing_events)
@@ -167,7 +168,7 @@ def import_statement_csv(
             description_raw=row.description_raw,
             extraction_confidence=1.0,
             fingerprint=build_evidence_fingerprint(
-                source_document_id=source_document.id,
+                source_document_id=source_fingerprint,
                 evidence_type=EvidenceType.STATEMENT_ROW,
                 fields={
                     "row_index": row.row_index,
