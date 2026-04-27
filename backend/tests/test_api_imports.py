@@ -34,6 +34,28 @@ def test_receipt_text_import_endpoint_is_idempotent_for_duplicate_receipts():
     assert len(events) == 1
 
 
+def test_receipt_text_import_endpoint_applies_mapping_rules():
+    client = TestClient(create_app())
+    client.post("/api/categories", json={"name": "Groceries"})
+    client.post(
+        "/api/categories/rules",
+        json={
+            "pattern": "Aldi",
+            "pattern_type": "merchant",
+            "category_id": "cat_1",
+            "priority": 100,
+        },
+    )
+
+    client.post(
+        "/api/imports/receipt-text",
+        json={"raw_text": "ALDI\nDate: 17/04/2026\nTotal: €42,97 EUR"},
+    )
+    events = client.get("/api/events?month=2026-04").json()
+
+    assert events[0]["category_id"] == "cat_1"
+
+
 def test_events_endpoint_lists_imported_receipt_event():
     client = TestClient(create_app())
     client.post(

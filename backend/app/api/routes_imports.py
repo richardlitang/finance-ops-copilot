@@ -4,6 +4,7 @@ from fastapi import APIRouter, Depends
 
 from app.repositories import InMemoryFinanceRepository
 from app.schemas.imports import ImportResponse, ReceiptTextImportRequest, StatementCsvImportRequest
+from app.services.categorization import categorize_event
 from app.services.import_service import import_receipt_text, import_statement_csv
 
 from .dependencies import get_repository
@@ -36,7 +37,16 @@ def import_receipt_text_endpoint(
             spending_event_ids=[existing_event.id],
             evidence_link_ids=[],
         )
-    spending_event = repository.save_spending_event(result.spending_event)
+    category_decision = categorize_event(
+        result.spending_event,
+        evidence_record,
+        repository.list_mapping_rules(),
+    )
+    event_to_save = result.spending_event
+    if category_decision.category_id:
+        event_to_save = event_to_save.with_updates(category_id=category_decision.category_id)
+
+    spending_event = repository.save_spending_event(event_to_save)
     evidence_link = repository.save_evidence_link(result.evidence_link)
     return ImportResponse(
         source_document_id=source_document.id,
