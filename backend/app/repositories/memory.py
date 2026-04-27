@@ -41,6 +41,15 @@ class InMemoryFinanceRepository:
         self.match_candidates[match_candidate.id] = match_candidate
         return match_candidate
 
+    def get_spending_event(self, event_id: str) -> SpendingEvent | None:
+        return self.spending_events.get(event_id)
+
+    def get_evidence_record(self, evidence_record_id: str) -> EvidenceRecord | None:
+        return self.evidence_records.get(evidence_record_id)
+
+    def get_match_candidate(self, match_candidate_id: str) -> MatchCandidate | None:
+        return self.match_candidates.get(match_candidate_id)
+
     def list_spending_events(self) -> list[SpendingEvent]:
         return list(self.spending_events.values())
 
@@ -63,6 +72,9 @@ class InMemoryFinanceRepository:
     def find_evidence_by_fingerprint(self, fingerprint: str) -> EvidenceRecord | None:
         evidence_id = self._evidence_by_fingerprint.get(fingerprint)
         return self.evidence_records[evidence_id] if evidence_id else None
+
+    def list_match_candidates(self) -> list[MatchCandidate]:
+        return list(self.match_candidates.values())
 
     def next_id(self, entity_name: str) -> str:
         prefixes = {

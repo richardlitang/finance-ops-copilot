@@ -75,6 +75,21 @@ class SqlAlchemyFinanceRepository:
             session.commit()
             return match_candidate
 
+    def get_spending_event(self, event_id: str) -> SpendingEvent | None:
+        with self.session_factory() as session:
+            row = session.get(SpendingEventRow, event_id)
+            return spending_event_from_row(row) if row else None
+
+    def get_evidence_record(self, evidence_record_id: str) -> EvidenceRecord | None:
+        with self.session_factory() as session:
+            row = session.get(EvidenceRecordRow, evidence_record_id)
+            return evidence_record_from_row(row) if row else None
+
+    def get_match_candidate(self, match_candidate_id: str) -> MatchCandidate | None:
+        with self.session_factory() as session:
+            row = session.get(MatchCandidateRow, match_candidate_id)
+            return match_candidate_from_row(row) if row else None
+
     def list_spending_events(self) -> list[SpendingEvent]:
         with self.session_factory() as session:
             rows = session.scalars(select(SpendingEventRow).order_by(SpendingEventRow.occurred_at)).all()

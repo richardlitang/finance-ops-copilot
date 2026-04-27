@@ -62,4 +62,5 @@ def test_repository_lists_provisional_events():
     repo.save_spending_event(event)
 
     assert repo.list_provisional_events() == [event]
+    assert repo.get_spending_event("evt_1") == event
     assert repo.find_event_by_canonical_evidence_id("missing") is None
