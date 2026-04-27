@@ -72,7 +72,25 @@ python3 -m unittest discover -s backend/tests
 
 **Commit:** `chore(backend): add python package metadata`
 
-### Task 4: Next Slice, Backend API Skeleton
+### Task 4: Add Idempotency Fingerprints
+
+**Files:**
+
+- `backend/app/domain/fingerprints.py`
+- `backend/tests/test_domain_fingerprints.py`
+- `backend/app/domain/__init__.py`
+
+**Action:** Add deterministic fingerprint helpers for document and evidence idempotency.
+
+**Verify:**
+
+```bash
+python3 -B -m unittest discover -s tests
+```
+
+**Commit:** `feat(backend): add idempotency fingerprint helpers`
+
+### Task 5: Next Slice, Backend API Skeleton
 
 **Files:**
 

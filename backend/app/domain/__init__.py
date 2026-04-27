@@ -10,10 +10,13 @@ from .enums import (
     SourceQuality,
     SourceType,
 )
+from .fingerprints import build_evidence_fingerprint, build_source_document_fingerprint
 from .models import EvidenceLink, EvidenceRecord, SourceDocument, SpendingEvent
 from .reconciliation import apply_statement_confirmation
 
 __all__ = [
+    "build_evidence_fingerprint",
+    "build_source_document_fingerprint",
     "ConfirmationStatus",
     "Direction",
     "EvidenceLink",
@@ -30,4 +33,3 @@ __all__ = [
     "SpendingEvent",
     "apply_statement_confirmation",
 ]
-
