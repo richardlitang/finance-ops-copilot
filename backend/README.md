@@ -26,6 +26,14 @@ cd backend
 .venv/bin/fastapi dev app/main.py
 ```
 
+For SQLite persistence:
+
+```bash
+cd backend
+FINANCE_DATABASE_URL=sqlite+pysqlite:///./finance.sqlite .venv/bin/alembic upgrade head
+FINANCE_DATABASE_URL=sqlite+pysqlite:///./finance.sqlite .venv/bin/fastapi dev app/main.py
+```
+
 Available V1 endpoints:
 
 - `GET /health`
@@ -36,3 +44,4 @@ Available V1 endpoints:
 - `POST /api/export/csv`
 
 Current persistence is intentionally in-memory. It proves the receipt-first reconciliation model before adding SQLAlchemy persistence.
+Without `FINANCE_DATABASE_URL`, the API uses in-memory storage. With `FINANCE_DATABASE_URL`, it uses the SQLAlchemy repository.

@@ -1,3 +1,5 @@
+import os
+
 from sqlalchemy.orm import sessionmaker
 
 from fastapi import FastAPI
@@ -27,4 +29,4 @@ def create_app(database_url: str | None = None) -> FastAPI:
     return app
 
 
-app = create_app()
+app = create_app(os.environ.get("FINANCE_DATABASE_URL"))
