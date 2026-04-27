@@ -13,6 +13,7 @@ from app.domain import (
     SpendingEvent,
 )
 from app.repositories import SqlAlchemyFinanceRepository
+from app.services.import_service import import_receipt_text
 
 
 NOW = datetime(2026, 4, 17, tzinfo=timezone.utc)
@@ -62,3 +63,25 @@ def test_sqlalchemy_repository_saves_and_lists_spending_events():
     repo.save_spending_event(event)
 
     assert repo.list_spending_events() == [event]
+
+
+def test_sqlalchemy_repository_persists_receipt_import_result():
+    repo = repository()
+    result = import_receipt_text(
+        raw_text="ALDI\nDate: 17/04/2026\nTotal: €42,97 EUR",
+        now=NOW,
+    )
+
+    repo.save_source_document(result.source_document)
+    repo.save_evidence_record(result.evidence_record)
+    repo.save_spending_event(result.spending_event)
+    repo.save_evidence_link(result.evidence_link)
+
+    events = repo.list_spending_events()
+    links = repo.list_evidence_links()
+
+    assert len(events) == 1
+    assert events[0].merchant_normalized == "Aldi"
+    assert events[0].amount_minor == 4297
+    assert len(links) == 1
+    assert links[0].evidence_record_id == result.evidence_record.id
