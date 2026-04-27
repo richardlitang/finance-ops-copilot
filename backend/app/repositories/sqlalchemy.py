@@ -97,6 +97,19 @@ class SqlAlchemyFinanceRepository:
             rows = session.scalars(select(MatchCandidateRow).order_by(MatchCandidateRow.created_at)).all()
             return [match_candidate_from_row(row) for row in rows]
 
+    def find_event_by_canonical_evidence_id(self, evidence_record_id: str) -> SpendingEvent | None:
+        with self.session_factory() as session:
+            row = session.scalars(
+                select(SpendingEventRow).where(
+                    SpendingEventRow.canonical_source_evidence_id == evidence_record_id
+                )
+            ).first()
+            return spending_event_from_row(row) if row else None
+
+    def evidence_record_exists(self, evidence_record_id: str) -> bool:
+        with self.session_factory() as session:
+            return session.get(EvidenceRecordRow, evidence_record_id) is not None
+
     def next_id(self, entity_name: str) -> str:
         mappings = {
             "source_document": ("src", SourceDocumentRow),

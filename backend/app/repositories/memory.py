@@ -51,6 +51,15 @@ class InMemoryFinanceRepository:
             if event.confirmation_status.value == "provisional"
         ]
 
+    def find_event_by_canonical_evidence_id(self, evidence_record_id: str) -> SpendingEvent | None:
+        for event in self.spending_events.values():
+            if event.canonical_source_evidence_id == evidence_record_id:
+                return event
+        return None
+
+    def evidence_record_exists(self, evidence_record_id: str) -> bool:
+        return evidence_record_id in self.evidence_records
+
     def next_id(self, entity_name: str) -> str:
         prefixes = {
             "source_document": ("src", self.source_documents),

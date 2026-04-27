@@ -63,6 +63,7 @@ def test_sqlalchemy_repository_saves_and_lists_spending_events():
     repo.save_spending_event(event)
 
     assert repo.list_spending_events() == [event]
+    assert repo.find_event_by_canonical_evidence_id("missing") is None
 
 
 def test_sqlalchemy_repository_persists_receipt_import_result():
