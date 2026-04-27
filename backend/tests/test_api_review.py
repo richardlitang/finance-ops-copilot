@@ -65,6 +65,22 @@ def test_correct_event_category_can_create_future_mapping_rule():
     assert rules.json()[0]["created_from_review"] is True
 
 
+def test_correct_event_category_requires_existing_category():
+    client = TestClient(create_app())
+    client.post(
+        "/api/imports/receipt-text",
+        json={"raw_text": "ALDI\nDate: 17/04/2026\nTotal: €42,97 EUR"},
+    )
+
+    response = client.post(
+        "/api/review/events/evt_1/category",
+        json={"category_id": "cat_missing", "create_mapping_rule": True},
+    )
+
+    assert response.status_code == 404
+    assert response.json()["detail"] == "category not found"
+
+
 def test_ignore_event_updates_lifecycle_status():
     client = TestClient(create_app())
     client.post(

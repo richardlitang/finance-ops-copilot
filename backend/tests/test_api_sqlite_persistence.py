@@ -114,3 +114,29 @@ def test_review_actions_work_with_sqlite_repository(tmp_path):
     assert confirmed.status_code == 200
     assert confirmed.json()["spending_event"]["confirmation_status"] == "confirmed"
     assert confirmed.json()["evidence_link"]["status"] == "confirmed"
+
+
+def test_category_rules_persist_with_sqlite_repository(tmp_path):
+    database_url = f"sqlite+pysqlite:///{tmp_path / 'finance.sqlite'}"
+    first_client = TestClient(create_app(database_url))
+
+    category_response = first_client.post("/api/categories", json={"name": "Groceries"})
+    rule_response = first_client.post(
+        "/api/categories/rules",
+        json={
+            "pattern": "Aldi",
+            "pattern_type": "merchant",
+            "category_id": "cat_1",
+        },
+    )
+
+    second_client = TestClient(create_app(database_url))
+    categories_response = second_client.get("/api/categories")
+    rules_response = second_client.get("/api/categories/rules")
+
+    assert category_response.status_code == 200
+    assert rule_response.status_code == 200
+    assert categories_response.status_code == 200
+    assert rules_response.status_code == 200
+    assert categories_response.json()[0]["name"] == "Groceries"
+    assert rules_response.json()[0]["category_id"] == "cat_1"

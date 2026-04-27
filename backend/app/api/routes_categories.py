@@ -1,6 +1,6 @@
 from datetime import datetime, timezone
 
-from fastapi import APIRouter, Depends
+from fastapi import APIRouter, Depends, HTTPException
 
 from app.domain import Category
 from app.repositories import InMemoryFinanceRepository
@@ -10,7 +10,7 @@ from app.schemas.categories import (
     MappingRuleCreateRequest,
     MappingRuleResponse,
 )
-from app.services.categorization import MappingRule, PatternType
+from app.services.categorization import MappingRule
 
 from .dependencies import get_repository
 
@@ -51,10 +51,11 @@ def create_mapping_rule(
     request: MappingRuleCreateRequest,
     repository: InMemoryFinanceRepository = Depends(get_repository),
 ) -> MappingRuleResponse:
+    _get_category_or_404(repository, request.category_id)
     rule = MappingRule(
         id=repository.next_id("mapping_rule"),
         pattern=request.pattern,
-        pattern_type=PatternType(request.pattern_type),
+        pattern_type=request.pattern_type,
         category_id=request.category_id,
         priority=request.priority,
         created_from_review=request.created_from_review,
@@ -62,3 +63,10 @@ def create_mapping_rule(
     )
     saved = repository.save_mapping_rule(rule)
     return MappingRuleResponse.from_domain(saved)
+
+
+def _get_category_or_404(repository: InMemoryFinanceRepository, category_id: str) -> Category:
+    for category in repository.list_categories():
+        if category.id == category_id:
+            return category
+    raise HTTPException(status_code=404, detail="category not found")

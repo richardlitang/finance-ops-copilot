@@ -78,6 +78,7 @@ def correct_event_category(
     repository: InMemoryFinanceRepository = Depends(get_repository),
 ) -> ReviewActionResponse:
     event = _get_event_or_404(repository, event_id)
+    _get_category_or_404(repository, request.category_id)
     updated = event.with_updates(
         category_id=request.category_id,
         review_status=ReviewStatus.RESOLVED,
@@ -145,3 +146,10 @@ def _get_event_or_404(repository: InMemoryFinanceRepository, event_id: str):
     if event is None:
         raise HTTPException(status_code=404, detail="spending event not found")
     return event
+
+
+def _get_category_or_404(repository: InMemoryFinanceRepository, category_id: str):
+    for category in repository.list_categories():
+        if category.id == category_id:
+            return category
+    raise HTTPException(status_code=404, detail="category not found")

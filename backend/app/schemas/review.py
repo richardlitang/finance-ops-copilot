@@ -2,7 +2,7 @@ from __future__ import annotations
 
 from datetime import datetime
 
-from pydantic import BaseModel
+from pydantic import BaseModel, Field, field_validator
 
 from app.domain import EvidenceLink
 from app.domain.models import MatchCandidate
@@ -59,5 +59,13 @@ class ReviewActionResponse(BaseModel):
 
 
 class CategoryCorrectionRequest(BaseModel):
-    category_id: str
+    category_id: str = Field(min_length=1)
     create_mapping_rule: bool = False
+
+    @field_validator("category_id")
+    @classmethod
+    def normalize_category_id(cls, value: str) -> str:
+        normalized = value.strip()
+        if not normalized:
+            raise ValueError("category id is required")
+        return normalized
