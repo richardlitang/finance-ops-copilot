@@ -33,3 +33,30 @@ def test_events_endpoint_lists_imported_receipt_event():
     assert len(body) == 1
     assert body[0]["merchant_normalized"] == "Aldi"
     assert body[0]["confirmation_status"] == "provisional"
+
+
+def test_statement_csv_import_endpoint_confirms_matching_receipt_event():
+    client = TestClient(create_app())
+    client.post(
+        "/api/imports/receipt-text",
+        json={"raw_text": "ALDI\nDate: 17/04/2026\nTotal: €42,97 EUR"},
+    )
+
+    response = client.post(
+        "/api/imports/statement-csv",
+        json={
+            "raw_csv": (
+                "date,posted_date,description,merchant,amount,currency\n"
+                "2026-04-17,2026-04-18,ALDI,ALDI,42.97,EUR"
+            )
+        },
+    )
+
+    assert response.status_code == 200
+    assert response.json()["match_candidate_ids"] == ["match_1_evt_1"]
+
+    events_response = client.get("/api/events?month=2026-04")
+    events = events_response.json()
+    assert len(events) == 1
+    assert events[0]["confirmation_status"] == "confirmed"
+    assert events[0]["source_quality"] == "receipt_and_statement"
