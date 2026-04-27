@@ -28,6 +28,14 @@ def import_receipt_text_endpoint(
     )
     source_document = repository.save_source_document(result.source_document)
     evidence_record = repository.save_evidence_record(result.evidence_record)
+    existing_event = repository.find_event_by_canonical_evidence_id(evidence_record.id)
+    if existing_event:
+        return ImportResponse(
+            source_document_id=source_document.id,
+            evidence_record_ids=[evidence_record.id],
+            spending_event_ids=[existing_event.id],
+            evidence_link_ids=[],
+        )
     spending_event = repository.save_spending_event(result.spending_event)
     evidence_link = repository.save_evidence_link(result.evidence_link)
     return ImportResponse(

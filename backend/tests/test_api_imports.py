@@ -19,6 +19,21 @@ def test_receipt_text_import_endpoint_creates_event():
     assert body["evidence_link_ids"] == ["link_1"]
 
 
+def test_receipt_text_import_endpoint_is_idempotent_for_duplicate_receipts():
+    client = TestClient(create_app())
+    payload = {"raw_text": "ALDI\nDate: 17/04/2026\nTotal: €42,97 EUR", "filename": "aldi.txt"}
+
+    first = client.post("/api/imports/receipt-text", json=payload)
+    second = client.post("/api/imports/receipt-text", json=payload)
+    events = client.get("/api/events?month=2026-04").json()
+
+    assert first.status_code == 200
+    assert second.status_code == 200
+    assert second.json()["spending_event_ids"] == ["evt_1"]
+    assert second.json()["evidence_link_ids"] == []
+    assert len(events) == 1
+
+
 def test_events_endpoint_lists_imported_receipt_event():
     client = TestClient(create_app())
     client.post(
