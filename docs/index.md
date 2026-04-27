@@ -10,3 +10,7 @@
 - `docs/plans/active/` for plans in progress
 - `docs/plans/completed/` for finished plans
 - `docs/tech-debt.md` for recurring cleanup targets
+
+## Specs
+
+- [Receipt-First PRD](./specs/receipt-first-prd.md)
