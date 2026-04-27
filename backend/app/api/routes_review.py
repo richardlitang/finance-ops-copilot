@@ -4,13 +4,24 @@ from fastapi import APIRouter, Depends, HTTPException
 
 from app.repositories import InMemoryFinanceRepository
 from app.schemas.events import SpendingEventResponse
-from app.schemas.review import ReviewActionResponse
+from app.schemas.review import MatchCandidateResponse, ReviewActionResponse
 from app.services.review_service import confirm_receipt_as_manual, ignore_event, mark_event_duplicate
 
 from .dependencies import get_repository
 
 
 router = APIRouter(prefix="/api/review", tags=["review"])
+
+
+@router.get("/matches", response_model=list[MatchCandidateResponse])
+def list_review_matches(
+    repository: InMemoryFinanceRepository = Depends(get_repository),
+) -> list[MatchCandidateResponse]:
+    return [
+        MatchCandidateResponse.from_domain(candidate)
+        for candidate in repository.list_match_candidates()
+        if candidate.decision == "needs_review"
+    ]
 
 
 @router.post("/events/{event_id}/confirm-manual", response_model=ReviewActionResponse)

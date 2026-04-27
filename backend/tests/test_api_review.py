@@ -1,5 +1,8 @@
+from datetime import datetime, timezone
+
 from fastapi.testclient import TestClient
 
+from app.domain.models import MatchCandidate
 from app.main import create_app
 
 
@@ -53,3 +56,25 @@ def test_ignore_event_updates_lifecycle_status():
     assert response.status_code == 200
     assert response.json()["spending_event"]["lifecycle_status"] == "ignored"
     assert response.json()["spending_event"]["review_status"] == "resolved"
+
+
+def test_list_review_matches_returns_medium_confidence_candidates():
+    app = create_app()
+    app.state.repository.save_match_candidate(
+        MatchCandidate(
+            id="match_1",
+            spending_event_id="evt_1",
+            statement_evidence_record_id="ev_1",
+            score=72,
+            decision="needs_review",
+            reasons=("exact_amount",),
+            created_at=datetime(2026, 4, 20, tzinfo=timezone.utc),
+        )
+    )
+    client = TestClient(app)
+
+    response = client.get("/api/review/matches")
+
+    assert response.status_code == 200
+    assert response.json()[0]["id"] == "match_1"
+    assert response.json()[0]["reasons"] == ["exact_amount"]
