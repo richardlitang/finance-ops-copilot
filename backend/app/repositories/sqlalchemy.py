@@ -110,6 +110,13 @@ class SqlAlchemyFinanceRepository:
         with self.session_factory() as session:
             return session.get(EvidenceRecordRow, evidence_record_id) is not None
 
+    def find_evidence_by_fingerprint(self, fingerprint: str) -> EvidenceRecord | None:
+        with self.session_factory() as session:
+            row = session.scalars(
+                select(EvidenceRecordRow).where(EvidenceRecordRow.fingerprint == fingerprint)
+            ).first()
+            return evidence_record_from_row(row) if row else None
+
     def next_id(self, entity_name: str) -> str:
         mappings = {
             "source_document": ("src", SourceDocumentRow),

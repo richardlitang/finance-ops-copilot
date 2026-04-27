@@ -130,6 +130,9 @@ def import_statement_csv(
     existing_events: list[SpendingEvent],
     now: datetime | None = None,
     source_document_id: str = "src_statement_1",
+    evidence_record_id_start: int = 1,
+    spending_event_id_start: int = 1,
+    evidence_link_id_start: int = 1,
     filename: str | None = None,
 ) -> StatementImportResult:
     created_at = now or datetime.now(timezone.utc)
@@ -154,7 +157,7 @@ def import_statement_csv(
     candidates: list[MatchCandidate] = []
 
     for row in parse_statement_csv(raw_csv):
-        evidence_id = f"ev_statement_{row.row_index}"
+        evidence_id = f"ev_{evidence_record_id_start + row.row_index - 1}"
         evidence = EvidenceRecord(
             id=evidence_id,
             source_document_id=source_document.id,
@@ -188,7 +191,7 @@ def import_statement_csv(
             if event.confirmation_status is not ConfirmationStatus.PROVISIONAL:
                 continue
             candidate = build_match_candidate(
-                candidate_id=f"match_{row.row_index}_{event.id}",
+                candidate_id=f"match_{evidence_id}_{event.id}",
                 event=event,
                 statement=evidence,
                 created_at=created_at,
@@ -203,7 +206,7 @@ def import_statement_csv(
             confirmed, link = apply_statement_confirmation(
                 event,
                 evidence,
-                link_id=f"link_statement_{row.row_index}",
+                link_id=f"link_{evidence_link_id_start + row.row_index - 1}",
                 matched_at=created_at,
                 match_score=best_candidate.score,
             )
@@ -212,7 +215,7 @@ def import_statement_csv(
             continue
 
         event = SpendingEvent(
-            id=f"evt_statement_{row.row_index}",
+            id=f"evt_{spending_event_id_start + row.row_index - 1}",
             occurred_at=row.occurred_at,
             posted_at=row.posted_at,
             merchant_normalized=row.merchant_normalized,
@@ -230,7 +233,7 @@ def import_statement_csv(
         spending_events.append(event)
         links.append(
             EvidenceLink(
-                id=f"link_statement_{row.row_index}",
+                id=f"link_{evidence_link_id_start + row.row_index - 1}",
                 spending_event_id=event.id,
                 evidence_record_id=evidence.id,
                 link_type=EvidenceLinkType.CREATED_FROM,

@@ -60,6 +60,10 @@ class InMemoryFinanceRepository:
     def evidence_record_exists(self, evidence_record_id: str) -> bool:
         return evidence_record_id in self.evidence_records
 
+    def find_evidence_by_fingerprint(self, fingerprint: str) -> EvidenceRecord | None:
+        evidence_id = self._evidence_by_fingerprint.get(fingerprint)
+        return self.evidence_records[evidence_id] if evidence_id else None
+
     def next_id(self, entity_name: str) -> str:
         prefixes = {
             "source_document": ("src", self.source_documents),

@@ -68,7 +68,7 @@ def test_statement_csv_import_endpoint_confirms_matching_receipt_event():
     )
 
     assert response.status_code == 200
-    assert response.json()["match_candidate_ids"] == ["match_1_evt_1"]
+    assert response.json()["match_candidate_ids"] == ["match_ev_2_evt_1"]
 
     events_response = client.get("/api/events?month=2026-04")
     events = events_response.json()

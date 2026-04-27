@@ -57,13 +57,36 @@ def import_statement_csv_endpoint(
         existing_events=repository.list_spending_events(),
         now=datetime.now(timezone.utc),
         source_document_id=repository.next_id("source_document"),
+        evidence_record_id_start=_id_number(repository.next_id("evidence_record")),
+        spending_event_id_start=_id_number(repository.next_id("spending_event")),
+        evidence_link_id_start=_id_number(repository.next_id("evidence_link")),
     )
     source_document = repository.save_source_document(result.source_document)
-    evidence_records = [repository.save_evidence_record(record) for record in result.evidence_records]
-    spending_events = [repository.save_spending_event(event) for event in result.spending_events]
-    evidence_links = [repository.save_evidence_link(link) for link in result.evidence_links]
+    new_evidence_ids: set[str] = set()
+    evidence_records = []
+    for record in result.evidence_records:
+        existing_evidence = repository.find_evidence_by_fingerprint(record.fingerprint)
+        evidence_record = repository.save_evidence_record(record)
+        evidence_records.append(evidence_record)
+        if existing_evidence is None:
+            new_evidence_ids.add(evidence_record.id)
+
+    spending_events = []
+    for event in result.spending_events:
+        if event.canonical_source_evidence_id in new_evidence_ids or event.id in {
+            existing.id for existing in repository.list_spending_events()
+        }:
+            spending_events.append(repository.save_spending_event(event))
+
+    evidence_links = [
+        repository.save_evidence_link(link)
+        for link in result.evidence_links
+        if link.evidence_record_id in new_evidence_ids
+    ]
     match_candidates = [
-        repository.save_match_candidate(candidate) for candidate in result.match_candidates
+        repository.save_match_candidate(candidate)
+        for candidate in result.match_candidates
+        if candidate.statement_evidence_record_id in new_evidence_ids
     ]
     return ImportResponse(
         source_document_id=source_document.id,
@@ -72,3 +95,7 @@ def import_statement_csv_endpoint(
         evidence_link_ids=[link.id for link in evidence_links],
         match_candidate_ids=[candidate.id for candidate in match_candidates],
     )
+
+
+def _id_number(value: str) -> int:
+    return int(value.rsplit("_", 1)[1])
