@@ -232,6 +232,9 @@ def import_statement_csv(
                 for item in spending_events
             ]
 
+        if best_candidate and best_candidate.decision == "needs_review":
+            continue
+
         row_review_reasons = _review_reasons_for_statement_row(row.warnings)
         event = SpendingEvent(
             id=f"evt_{spending_event_id_start + row.row_index - 1}",

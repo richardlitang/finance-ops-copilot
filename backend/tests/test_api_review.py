@@ -122,6 +122,21 @@ def test_list_review_matches_returns_medium_confidence_candidates():
 
 def test_reject_match_records_rejected_evidence_link():
     app = create_app()
+    app.state.repository.save_evidence_record(
+        EvidenceRecord(
+            id="ev_1",
+            source_document_id="src_statement_1",
+            evidence_type=EvidenceType.STATEMENT_ROW,
+            merchant_normalized="Aldi",
+            occurred_at=datetime(2026, 4, 17, tzinfo=timezone.utc),
+            posted_at=datetime(2026, 4, 18, tzinfo=timezone.utc),
+            amount_minor=4300,
+            currency="EUR",
+            extraction_confidence=1.0,
+            fingerprint="statement-fingerprint",
+            created_at=datetime(2026, 4, 20, tzinfo=timezone.utc),
+        )
+    )
     app.state.repository.save_match_candidate(
         MatchCandidate(
             id="match_1",
@@ -141,6 +156,8 @@ def test_reject_match_records_rejected_evidence_link():
     assert response.json()["status"] == "rejected"
     assert response.json()["spending_event_id"] == "evt_1"
     assert response.json()["evidence_record_id"] == "ev_1"
+    assert app.state.repository.get_match_candidate("match_1").decision == "rejected"
+    assert app.state.repository.list_spending_events()[0].source_quality.value == "statement_only"
 
 
 def test_confirm_match_updates_event_and_links_statement_evidence():
@@ -186,3 +203,4 @@ def test_confirm_match_updates_event_and_links_statement_evidence():
     assert body["spending_event"]["review_reasons"] == []
     assert body["spending_event"]["source_quality"] == "receipt_and_statement"
     assert body["evidence_link"]["status"] == "confirmed"
+    assert app.state.repository.get_match_candidate("match_1").decision == "confirmed"

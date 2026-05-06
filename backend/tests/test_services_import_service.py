@@ -81,6 +81,29 @@ class ImportServiceTests(unittest.TestCase):
         self.assertEqual(result.spending_events[0].confirmation_status, ConfirmationStatus.CONFIRMED)
         self.assertEqual(result.spending_events[0].source_quality, SourceQuality.STATEMENT_ONLY)
 
+    def test_import_statement_csv_defers_statement_event_for_review_match_candidate(self):
+        receipt = import_receipt_text(
+            raw_text="Book Shop\nDate: 17/04/2026\nTotal: €42,97 EUR",
+            now=datetime(2026, 4, 17, 12, 0, tzinfo=timezone.utc),
+        )
+
+        result = import_statement_csv(
+            raw_csv="date,posted_date,description,merchant,amount,currency\n2026-04-22,2026-04-23,Taxi,Taxi,42.97,EUR",
+            existing_events=[receipt.spending_event],
+            now=datetime(2026, 4, 20, 12, 0, tzinfo=timezone.utc),
+        )
+
+        self.assertEqual(len(result.evidence_records), 1)
+        self.assertEqual(len(result.spending_events), 1)
+        self.assertEqual(result.spending_events[0].source_quality, SourceQuality.RECEIPT_ONLY)
+        self.assertEqual(result.spending_events[0].review_status, ReviewStatus.NEEDS_REVIEW)
+        self.assertEqual(
+            result.spending_events[0].review_reasons,
+            (ReviewReason.POSSIBLE_RECEIPT_STATEMENT_MATCH,),
+        )
+        self.assertEqual(result.evidence_links, ())
+        self.assertEqual(result.match_candidates[0].decision, "needs_review")
+
     def test_import_statement_csv_routes_statement_row_warnings_to_review(self):
         result = import_statement_csv(
             raw_csv="date,description,merchant,amount,currency\n2026-04-19,,,15.99,EUR",

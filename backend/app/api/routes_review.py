@@ -1,3 +1,4 @@
+from dataclasses import replace
 from datetime import datetime, timezone
 
 from fastapi import APIRouter, Depends, HTTPException
@@ -16,6 +17,7 @@ from app.services.categorization import MappingRule, PatternType
 from app.services.audit_service import AuditService
 from app.services.review_service import (
     confirm_receipt_as_manual,
+    create_statement_only_event_from_evidence,
     ignore_event,
     mark_event_duplicate,
     reject_match_candidate,
@@ -157,8 +159,19 @@ def reject_match(
     if candidate is None:
         raise HTTPException(status_code=404, detail="match candidate not found")
     audit = AuditService(repository)
+    evidence = repository.get_evidence_record(candidate.statement_evidence_record_id)
+    if evidence is None:
+        raise HTTPException(status_code=404, detail="match target not found")
     link = reject_match_candidate(candidate, reviewed_at=datetime.now(timezone.utc))
     repository.save_evidence_link(link)
+    repository.save_spending_event(
+        create_statement_only_event_from_evidence(
+            evidence,
+            event_id=repository.next_id("spending_event"),
+            reviewed_at=datetime.now(timezone.utc),
+        )
+    )
+    repository.save_match_candidate(replace(candidate, decision="rejected"))
     audit.record(
         entity_type="spending_event",
         entity_id=candidate.spending_event_id,
@@ -192,6 +205,7 @@ def confirm_match(
     )
     repository.save_spending_event(confirmed)
     repository.save_evidence_link(link)
+    repository.save_match_candidate(replace(candidate, decision="confirmed"))
     audit.record(
         entity_type="spending_event",
         entity_id=confirmed.id,
