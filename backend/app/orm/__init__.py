@@ -1,4 +1,5 @@
 from .models import (
+    AuditEventRow,
     CategoryRow,
     EvidenceLinkRow,
     EvidenceRecordRow,
@@ -9,6 +10,7 @@ from .models import (
 )
 
 __all__ = [
+    "AuditEventRow",
     "CategoryRow",
     "EvidenceLinkRow",
     "EvidenceRecordRow",

@@ -139,7 +139,7 @@ class GoogleSheetsService:
                     "confidence": 1.0,
                     "duplicate_status": event.lifecycle_status.value,
                     "status": "approved",
-                    "review_reasons": "",
+                    "review_reasons": ",".join(reason.value for reason in event.review_reasons),
                     "export_timestamp": exported_at,
                 }
             )
@@ -383,6 +383,8 @@ def _category_name(event: SpendingEvent, categories: dict[str, Category]) -> str
 
 
 def _review_issue_type(event: SpendingEvent) -> str:
+    if event.review_reasons:
+        return event.review_reasons[0].value
     if event.lifecycle_status is LifecycleStatus.DUPLICATE:
         return "possible_duplicate"
     if event.confirmation_status is ConfirmationStatus.PROVISIONAL:
@@ -391,6 +393,8 @@ def _review_issue_type(event: SpendingEvent) -> str:
 
 
 def _review_rationale(event: SpendingEvent) -> str:
+    if event.review_reasons:
+        return ", ".join(reason.value for reason in event.review_reasons)
     if event.confirmation_status is ConfirmationStatus.PROVISIONAL:
         return "receipt is still provisional and needs statement or manual confirmation"
     return f"event requires operator review with source_quality={event.source_quality.value}"

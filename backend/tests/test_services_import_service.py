@@ -1,7 +1,7 @@
 from datetime import datetime, timezone
 import unittest
 
-from app.domain import ConfirmationStatus, EvidenceType, ReviewStatus, SourceQuality
+from app.domain import ConfirmationStatus, EvidenceType, ReviewReason, ReviewStatus, SourceQuality
 from app.services.import_service import import_receipt_text, import_statement_csv
 
 
@@ -18,6 +18,7 @@ class ImportServiceTests(unittest.TestCase):
         self.assertEqual(result.evidence_record.amount_minor, 4297)
         self.assertEqual(result.spending_event.confirmation_status, ConfirmationStatus.PROVISIONAL)
         self.assertEqual(result.spending_event.review_status, ReviewStatus.CLEAR)
+        self.assertEqual(result.spending_event.review_reasons, ())
         self.assertEqual(result.spending_event.source_quality, SourceQuality.RECEIPT_ONLY)
         self.assertEqual(result.spending_event.canonical_source_evidence_id, result.evidence_record.id)
         self.assertEqual(result.evidence_link.spending_event_id, result.spending_event.id)
@@ -30,6 +31,10 @@ class ImportServiceTests(unittest.TestCase):
         )
 
         self.assertEqual(result.spending_event.review_status, ReviewStatus.NEEDS_REVIEW)
+        self.assertEqual(
+            result.spending_event.review_reasons,
+            (ReviewReason.PARSE_WARNING, ReviewReason.MISSING_REQUIRED_FIELD),
+        )
         self.assertIn("missing_total", result.evidence_record.warnings)
 
     def test_import_receipt_text_uses_stable_evidence_fingerprint_across_generated_ids(self):
@@ -84,6 +89,10 @@ class ImportServiceTests(unittest.TestCase):
         )
 
         self.assertEqual(result.spending_events[0].review_status, ReviewStatus.NEEDS_REVIEW)
+        self.assertEqual(
+            result.spending_events[0].review_reasons,
+            (ReviewReason.PARSE_WARNING, ReviewReason.MISSING_REQUIRED_FIELD),
+        )
         self.assertIn("missing_merchant", result.evidence_records[0].warnings)
 
 

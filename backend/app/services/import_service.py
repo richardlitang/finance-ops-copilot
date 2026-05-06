@@ -12,6 +12,7 @@ from app.domain import (
     EvidenceRecord,
     EvidenceType,
     LifecycleStatus,
+    ReviewReason,
     ReviewStatus,
     SourceDocument,
     SourceDocumentStatus,
@@ -97,7 +98,8 @@ def import_receipt_text(
         warnings=parsed.warnings,
         created_at=created_at,
     )
-    review_status = ReviewStatus.NEEDS_REVIEW if parsed.warnings else ReviewStatus.CLEAR
+    review_reasons = _review_reasons_for_receipt(parsed.warnings)
+    review_status = ReviewStatus.NEEDS_REVIEW if review_reasons else ReviewStatus.CLEAR
     spending_event = SpendingEvent(
         id=spending_event_id,
         occurred_at=parsed.occurred_at or created_at,
@@ -112,6 +114,7 @@ def import_receipt_text(
         created_at=created_at,
         updated_at=created_at,
         canonical_source_evidence_id=evidence_record.id,
+        review_reasons=review_reasons,
     )
     evidence_link = EvidenceLink(
         id=evidence_link_id,
@@ -214,6 +217,22 @@ def import_statement_csv(
             links.append(link)
             continue
 
+        if best_candidate and best_candidate.decision == "needs_review":
+            spending_events = [
+                item.with_updates(
+                    review_status=ReviewStatus.NEEDS_REVIEW,
+                    review_reasons=_merge_review_reasons(
+                        item.review_reasons,
+                        _review_reasons_for_match_candidate(best_candidate.reasons),
+                    ),
+                    updated_at=created_at,
+                )
+                if item.id == best_candidate.spending_event_id
+                else item
+                for item in spending_events
+            ]
+
+        row_review_reasons = _review_reasons_for_statement_row(row.warnings)
         event = SpendingEvent(
             id=f"evt_{spending_event_id_start + row.row_index - 1}",
             occurred_at=row.occurred_at,
@@ -223,12 +242,13 @@ def import_statement_csv(
             currency=row.currency,
             direction=Direction.EXPENSE if row.amount_minor >= 0 else Direction.INCOME,
             confirmation_status=ConfirmationStatus.CONFIRMED,
-            review_status=ReviewStatus.NEEDS_REVIEW if row.warnings else ReviewStatus.CLEAR,
+            review_status=ReviewStatus.NEEDS_REVIEW if row_review_reasons else ReviewStatus.CLEAR,
             lifecycle_status=LifecycleStatus.ACTIVE,
             source_quality=SourceQuality.STATEMENT_ONLY,
             created_at=created_at,
             updated_at=created_at,
             canonical_source_evidence_id=evidence.id,
+            review_reasons=row_review_reasons,
         )
         spending_events.append(event)
         links.append(
@@ -249,3 +269,34 @@ def import_statement_csv(
         evidence_links=tuple(links),
         match_candidates=tuple(candidates),
     )
+
+
+def _review_reasons_for_receipt(warnings: tuple[str, ...]) -> tuple[ReviewReason, ...]:
+    reasons: list[ReviewReason] = []
+    if warnings:
+        reasons.append(ReviewReason.PARSE_WARNING)
+        if any("missing" in warning.lower() for warning in warnings):
+            reasons.append(ReviewReason.MISSING_REQUIRED_FIELD)
+    return tuple(reasons)
+
+
+def _review_reasons_for_statement_row(warnings: tuple[str, ...]) -> tuple[ReviewReason, ...]:
+    return _review_reasons_for_receipt(warnings)
+
+
+def _review_reasons_for_match_candidate(reasons: tuple[str, ...]) -> tuple[ReviewReason, ...]:
+    mapped: list[ReviewReason] = [ReviewReason.POSSIBLE_RECEIPT_STATEMENT_MATCH]
+    if "amount_mismatch" in reasons:
+        mapped.append(ReviewReason.AMOUNT_MISMATCH)
+    return tuple(mapped)
+
+
+def _merge_review_reasons(
+    existing: tuple[ReviewReason, ...],
+    added: tuple[ReviewReason, ...],
+) -> tuple[ReviewReason, ...]:
+    merged: list[ReviewReason] = []
+    for reason in (*existing, *added):
+        if reason not in merged:
+            merged.append(reason)
+    return tuple(merged)

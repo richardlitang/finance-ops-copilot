@@ -105,6 +105,7 @@ def apply_statement_confirmation(
         posted_at=statement.posted_at or event.posted_at,
         confirmation_status=ConfirmationStatus.CONFIRMED,
         review_status=ReviewStatus.CLEAR,
+        review_reasons=(),
         source_quality=SourceQuality.RECEIPT_AND_STATEMENT,
         canonical_source_evidence_id=statement.id,
         updated_at=matched_at,

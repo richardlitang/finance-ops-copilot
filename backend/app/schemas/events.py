@@ -4,7 +4,7 @@ from datetime import datetime
 
 from pydantic import BaseModel
 
-from app.domain import EvidenceLink, EvidenceRecord, SpendingEvent
+from app.domain import AuditEvent, EvidenceLink, EvidenceRecord, SpendingEvent
 from app.domain.models import MatchCandidate
 
 
@@ -19,6 +19,7 @@ class SpendingEventResponse(BaseModel):
     category_id: str | None
     confirmation_status: str
     review_status: str
+    review_reasons: list[str]
     lifecycle_status: str
     source_quality: str
     canonical_source_evidence_id: str | None
@@ -36,9 +37,32 @@ class SpendingEventResponse(BaseModel):
             category_id=event.category_id,
             confirmation_status=event.confirmation_status.value,
             review_status=event.review_status.value,
+            review_reasons=[reason.value for reason in event.review_reasons],
             lifecycle_status=event.lifecycle_status.value,
             source_quality=event.source_quality.value,
             canonical_source_evidence_id=event.canonical_source_evidence_id,
+        )
+
+
+class AuditEventResponse(BaseModel):
+    id: str
+    entity_type: str
+    entity_id: str
+    event_type: str
+    actor: str
+    payload: dict[str, object]
+    created_at: datetime
+
+    @classmethod
+    def from_domain(cls, event: AuditEvent) -> "AuditEventResponse":
+        return cls(
+            id=event.id,
+            entity_type=event.entity_type,
+            entity_id=event.entity_id,
+            event_type=event.event_type.value,
+            actor=event.actor.value,
+            payload=event.payload,
+            created_at=event.created_at,
         )
 
 
@@ -124,3 +148,4 @@ class EventEvidenceResponse(BaseModel):
     event: SpendingEventResponse
     linked_evidence: list[EventEvidenceLinkResponse]
     match_candidates: list[EventMatchCandidateResponse]
+    audit_events: list[AuditEventResponse]

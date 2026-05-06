@@ -56,6 +56,7 @@ class SpendingEventRow(Base):
     category_id: Mapped[str | None] = mapped_column(String, nullable=True)
     confirmation_status: Mapped[str] = mapped_column(String, nullable=False)
     review_status: Mapped[str] = mapped_column(String, nullable=False)
+    review_reasons: Mapped[str] = mapped_column(Text, nullable=False, default="")
     lifecycle_status: Mapped[str] = mapped_column(String, nullable=False)
     source_quality: Mapped[str] = mapped_column(String, nullable=False)
     canonical_source_evidence_id: Mapped[str | None] = mapped_column(String, nullable=True)
@@ -106,4 +107,16 @@ class MappingRuleRow(Base):
     category_id: Mapped[str] = mapped_column(ForeignKey("categories.id"), nullable=False)
     priority: Mapped[int] = mapped_column(Integer, nullable=False)
     created_from_review: Mapped[int] = mapped_column(Integer, nullable=False, default=0)
+    created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), nullable=False)
+
+
+class AuditEventRow(Base):
+    __tablename__ = "audit_events"
+
+    id: Mapped[str] = mapped_column(String, primary_key=True)
+    entity_type: Mapped[str] = mapped_column(String, nullable=False)
+    entity_id: Mapped[str] = mapped_column(String, nullable=False)
+    event_type: Mapped[str] = mapped_column(String, nullable=False)
+    actor: Mapped[str] = mapped_column(String, nullable=False)
+    payload_json: Mapped[str] = mapped_column(Text, nullable=False, default="{}")
     created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), nullable=False)

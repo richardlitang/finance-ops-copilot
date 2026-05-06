@@ -44,6 +44,7 @@ class ReviewServiceTests(unittest.TestCase):
 
         self.assertEqual(event.confirmation_status, ConfirmationStatus.MANUAL_CONFIRMED)
         self.assertEqual(event.review_status, ReviewStatus.RESOLVED)
+        self.assertEqual(event.review_reasons, ())
         self.assertEqual(event.source_quality, SourceQuality.MANUAL)
 
     def test_mark_duplicate_and_ignore_update_lifecycle_status(self):

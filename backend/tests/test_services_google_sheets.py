@@ -8,6 +8,7 @@ from app.domain import (
     EvidenceType,
     LifecycleStatus,
     ReviewStatus,
+    ReviewReason,
     SourceDocument,
     SourceDocumentStatus,
     SourceQuality,
@@ -101,6 +102,7 @@ def build_repository() -> InMemoryFinanceRepository:
             source_quality=SourceQuality.RECEIPT_ONLY,
             created_at=NOW,
             updated_at=NOW,
+            review_reasons=(ReviewReason.UNCERTAIN_CATEGORY,),
         )
     )
     return repository
@@ -122,7 +124,8 @@ def test_google_sheets_service_syncs_exportable_events_review_queue_rules_and_su
     assert writes["normalized_entries"][0]["entry_id"] == "evt_approved"
     assert writes["normalized_entries"][0]["source_type"] == "receipt_text"
     assert writes["review_queue"][0]["entry_id"] == "evt_review"
-    assert writes["review_queue"][0]["issue_type"] == "unmatched_receipt"
+    assert writes["review_queue"][0]["issue_type"] == "uncertain_category"
+    assert writes["review_queue"][0]["rationale"] == "uncertain_category"
     assert writes["mapping_rules"][0]["rule_id"] == "rule_1"
     summary_keys = {row["metric_key"] for row in writes["monthly_summary"]}
     assert "2026-04:Groceries" in summary_keys

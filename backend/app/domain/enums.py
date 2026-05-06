@@ -39,6 +39,16 @@ class ReviewStatus(StrEnum):
     RESOLVED = "resolved"
 
 
+class ReviewReason(StrEnum):
+    UNCERTAIN_CATEGORY = "uncertain_category"
+    POSSIBLE_DUPLICATE = "possible_duplicate"
+    POSSIBLE_RECEIPT_STATEMENT_MATCH = "possible_receipt_statement_match"
+    AMOUNT_MISMATCH = "amount_mismatch"
+    UNMATCHED_RECEIPT = "unmatched_receipt"
+    MISSING_REQUIRED_FIELD = "missing_required_field"
+    PARSE_WARNING = "parse_warning"
+
+
 class LifecycleStatus(StrEnum):
     ACTIVE = "active"
     DUPLICATE = "duplicate"
@@ -63,3 +73,21 @@ class EvidenceLinkStatus(StrEnum):
     SUGGESTED = "suggested"
     CONFIRMED = "confirmed"
     REJECTED = "rejected"
+
+
+class AuditActor(StrEnum):
+    SYSTEM = "system"
+    USER = "user"
+
+
+class AuditEventType(StrEnum):
+    IMPORT_CREATED = "import_created"
+    REVIEW_ROUTED = "review_routed"
+    MATCH_CONFIRMED = "match_confirmed"
+    MATCH_REJECTED = "match_rejected"
+    CATEGORY_CORRECTED = "category_corrected"
+    MAPPING_RULE_CREATED = "mapping_rule_created"
+    EVENT_MANUAL_CONFIRMED = "event_manual_confirmed"
+    EVENT_MARKED_DUPLICATE = "event_marked_duplicate"
+    EVENT_IGNORED = "event_ignored"
+    GOOGLE_SHEETS_EXPORTED = "google_sheets_exported"

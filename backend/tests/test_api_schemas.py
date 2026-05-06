@@ -31,4 +31,5 @@ def test_spending_event_response_serializes_enum_values():
 
     assert response.confirmation_status == "provisional"
     assert response.review_status == "clear"
+    assert response.review_reasons == []
     assert response.source_quality == "receipt_only"

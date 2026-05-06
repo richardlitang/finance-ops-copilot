@@ -2,7 +2,7 @@ from datetime import datetime, timezone
 
 from fastapi import APIRouter, Depends, HTTPException
 
-from app.domain import ReviewStatus
+from app.domain import AuditActor, AuditEventType, ReviewStatus
 from app.domain.reconciliation import apply_statement_confirmation
 from app.repositories import InMemoryFinanceRepository
 from app.schemas.events import SpendingEventResponse
@@ -13,6 +13,7 @@ from app.schemas.review import (
     ReviewActionResponse,
 )
 from app.services.categorization import MappingRule, PatternType
+from app.services.audit_service import AuditService
 from app.services.review_service import (
     confirm_receipt_as_manual,
     ignore_event,
@@ -43,9 +44,17 @@ def confirm_manual_event(
     repository: InMemoryFinanceRepository = Depends(get_repository),
 ) -> ReviewActionResponse:
     event = _get_event_or_404(repository, event_id)
+    audit = AuditService(repository)
 
     updated = confirm_receipt_as_manual(event, reviewed_at=datetime.now(timezone.utc))
     repository.save_spending_event(updated)
+    audit.record(
+        entity_type="spending_event",
+        entity_id=updated.id,
+        event_type=AuditEventType.EVENT_MANUAL_CONFIRMED,
+        payload={"previous_confirmation_status": event.confirmation_status.value},
+        actor=AuditActor.USER,
+    )
     return ReviewActionResponse(spending_event=SpendingEventResponse.from_domain(updated))
 
 
@@ -55,8 +64,16 @@ def mark_duplicate_event(
     repository: InMemoryFinanceRepository = Depends(get_repository),
 ) -> ReviewActionResponse:
     event = _get_event_or_404(repository, event_id)
+    audit = AuditService(repository)
     updated = mark_event_duplicate(event, reviewed_at=datetime.now(timezone.utc))
     repository.save_spending_event(updated)
+    audit.record(
+        entity_type="spending_event",
+        entity_id=updated.id,
+        event_type=AuditEventType.EVENT_MARKED_DUPLICATE,
+        payload={"previous_lifecycle_status": event.lifecycle_status.value},
+        actor=AuditActor.USER,
+    )
     return ReviewActionResponse(spending_event=SpendingEventResponse.from_domain(updated))
 
 
@@ -66,8 +83,16 @@ def ignore_review_event(
     repository: InMemoryFinanceRepository = Depends(get_repository),
 ) -> ReviewActionResponse:
     event = _get_event_or_404(repository, event_id)
+    audit = AuditService(repository)
     updated = ignore_event(event, reviewed_at=datetime.now(timezone.utc))
     repository.save_spending_event(updated)
+    audit.record(
+        entity_type="spending_event",
+        entity_id=updated.id,
+        event_type=AuditEventType.EVENT_IGNORED,
+        payload={"previous_lifecycle_status": event.lifecycle_status.value},
+        actor=AuditActor.USER,
+    )
     return ReviewActionResponse(spending_event=SpendingEventResponse.from_domain(updated))
 
 
@@ -79,14 +104,26 @@ def correct_event_category(
 ) -> ReviewActionResponse:
     event = _get_event_or_404(repository, event_id)
     _get_category_or_404(repository, request.category_id)
+    audit = AuditService(repository)
     updated = event.with_updates(
         category_id=request.category_id,
         review_status=ReviewStatus.RESOLVED,
+        review_reasons=(),
         updated_at=datetime.now(timezone.utc),
     )
     repository.save_spending_event(updated)
+    audit.record(
+        entity_type="spending_event",
+        entity_id=updated.id,
+        event_type=AuditEventType.CATEGORY_CORRECTED,
+        payload={
+            "previous_category_id": event.category_id,
+            "category_id": request.category_id,
+        },
+        actor=AuditActor.USER,
+    )
     if request.create_mapping_rule:
-        repository.save_mapping_rule(
+        mapping_rule = repository.save_mapping_rule(
             MappingRule(
                 id=repository.next_id("mapping_rule"),
                 pattern=event.merchant_normalized,
@@ -96,6 +133,17 @@ def correct_event_category(
                 created_from_review=True,
                 created_at=datetime.now(timezone.utc),
             )
+        )
+        audit.record(
+            entity_type="spending_event",
+            entity_id=updated.id,
+            event_type=AuditEventType.MAPPING_RULE_CREATED,
+            payload={
+                "mapping_rule_id": mapping_rule.id,
+                "category_id": mapping_rule.category_id,
+                "pattern": mapping_rule.pattern,
+            },
+            actor=AuditActor.USER,
         )
     return ReviewActionResponse(spending_event=SpendingEventResponse.from_domain(updated))
 
@@ -108,8 +156,16 @@ def reject_match(
     candidate = repository.get_match_candidate(match_id)
     if candidate is None:
         raise HTTPException(status_code=404, detail="match candidate not found")
+    audit = AuditService(repository)
     link = reject_match_candidate(candidate, reviewed_at=datetime.now(timezone.utc))
     repository.save_evidence_link(link)
+    audit.record(
+        entity_type="spending_event",
+        entity_id=candidate.spending_event_id,
+        event_type=AuditEventType.MATCH_REJECTED,
+        payload={"match_candidate_id": candidate.id, "score": candidate.score},
+        actor=AuditActor.USER,
+    )
     return EvidenceLinkResponse.from_domain(link)
 
 
@@ -121,6 +177,7 @@ def confirm_match(
     candidate = repository.get_match_candidate(match_id)
     if candidate is None:
         raise HTTPException(status_code=404, detail="match candidate not found")
+    audit = AuditService(repository)
     event = repository.get_spending_event(candidate.spending_event_id)
     evidence = repository.get_evidence_record(candidate.statement_evidence_record_id)
     if event is None or evidence is None:
@@ -135,6 +192,17 @@ def confirm_match(
     )
     repository.save_spending_event(confirmed)
     repository.save_evidence_link(link)
+    audit.record(
+        entity_type="spending_event",
+        entity_id=confirmed.id,
+        event_type=AuditEventType.MATCH_CONFIRMED,
+        payload={
+            "match_candidate_id": candidate.id,
+            "statement_evidence_record_id": candidate.statement_evidence_record_id,
+            "score": candidate.score,
+        },
+        actor=AuditActor.USER,
+    )
     return ReviewActionResponse(
         spending_event=SpendingEventResponse.from_domain(confirmed),
         evidence_link=EvidenceLinkResponse.from_domain(link),

@@ -75,6 +75,8 @@ def test_export_google_sheets_endpoint_syncs_rows_through_gateway():
     assert response.status_code == 200
     assert response.json()["normalized_entries"] == 1
     assert response.json()["mapping_rules"] == 1
+    audit = client.get("/api/events/evt_1/audit").json()
+    assert audit[-1]["event_type"] == "google_sheets_exported"
     called_tabs = {tab for tab, _, _ in app.state.sheets_gateway.calls}
     assert "normalized_entries" in called_tabs
     assert "mapping_rules" in called_tabs

@@ -20,6 +20,7 @@ def test_confirm_manual_event_marks_receipt_as_manual_confirmed():
     body = response.json()["spending_event"]
     assert body["confirmation_status"] == "manual_confirmed"
     assert body["review_status"] == "resolved"
+    assert body["review_reasons"] == []
     assert body["source_quality"] == "manual"
 
 
@@ -43,6 +44,7 @@ def test_mark_event_duplicate_updates_lifecycle_status():
     assert response.status_code == 200
     assert response.json()["spending_event"]["lifecycle_status"] == "duplicate"
     assert response.json()["spending_event"]["review_status"] == "resolved"
+    assert response.json()["spending_event"]["review_reasons"] == []
 
 
 def test_correct_event_category_can_create_future_mapping_rule():
@@ -93,6 +95,7 @@ def test_ignore_event_updates_lifecycle_status():
     assert response.status_code == 200
     assert response.json()["spending_event"]["lifecycle_status"] == "ignored"
     assert response.json()["spending_event"]["review_status"] == "resolved"
+    assert response.json()["spending_event"]["review_reasons"] == []
 
 
 def test_list_review_matches_returns_medium_confidence_candidates():
@@ -180,5 +183,6 @@ def test_confirm_match_updates_event_and_links_statement_evidence():
     body = response.json()
     assert body["spending_event"]["confirmation_status"] == "confirmed"
     assert body["spending_event"]["amount_minor"] == 4300
+    assert body["spending_event"]["review_reasons"] == []
     assert body["spending_event"]["source_quality"] == "receipt_and_statement"
     assert body["evidence_link"]["status"] == "confirmed"

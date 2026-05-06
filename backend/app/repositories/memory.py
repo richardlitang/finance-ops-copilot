@@ -1,6 +1,6 @@
 from __future__ import annotations
 
-from app.domain import Category, EvidenceLink, EvidenceRecord, SourceDocument, SpendingEvent
+from app.domain import AuditEvent, Category, EvidenceLink, EvidenceRecord, SourceDocument, SpendingEvent
 from app.domain.models import MatchCandidate
 from app.services.categorization import MappingRule
 
@@ -14,6 +14,7 @@ class InMemoryFinanceRepository:
         self.match_candidates: dict[str, MatchCandidate] = {}
         self.categories: dict[str, Category] = {}
         self.mapping_rules: dict[str, MappingRule] = {}
+        self.audit_events: dict[str, AuditEvent] = {}
         self._source_by_fingerprint: dict[str, str] = {}
         self._evidence_by_fingerprint: dict[str, str] = {}
 
@@ -51,6 +52,10 @@ class InMemoryFinanceRepository:
     def save_mapping_rule(self, mapping_rule: MappingRule) -> MappingRule:
         self.mapping_rules[mapping_rule.id] = mapping_rule
         return mapping_rule
+
+    def save_audit_event(self, audit_event: AuditEvent) -> AuditEvent:
+        self.audit_events[audit_event.id] = audit_event
+        return audit_event
 
     def get_spending_event(self, event_id: str) -> SpendingEvent | None:
         return self.spending_events.get(event_id)
@@ -102,6 +107,12 @@ class InMemoryFinanceRepository:
     def list_mapping_rules(self) -> list[MappingRule]:
         return sorted(self.mapping_rules.values(), key=lambda rule: rule.priority, reverse=True)
 
+    def list_audit_events(self, *, entity_id: str | None = None) -> list[AuditEvent]:
+        events = sorted(self.audit_events.values(), key=lambda event: event.created_at)
+        if entity_id is None:
+            return events
+        return [event for event in events if event.entity_id == entity_id]
+
     def next_id(self, entity_name: str) -> str:
         prefixes = {
             "source_document": ("src", self.source_documents),
@@ -110,6 +121,7 @@ class InMemoryFinanceRepository:
             "evidence_link": ("link", self.evidence_links),
             "category": ("cat", self.categories),
             "mapping_rule": ("rule", self.mapping_rules),
+            "audit_event": ("audit", self.audit_events),
         }
         prefix, collection = prefixes[entity_name]
         return f"{prefix}_{len(collection) + 1}"

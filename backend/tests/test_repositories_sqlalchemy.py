@@ -3,6 +3,9 @@ from dataclasses import replace
 
 from app.db import create_db_engine, create_session_factory
 from app.domain import (
+    AuditActor,
+    AuditEvent,
+    AuditEventType,
     ConfirmationStatus,
     Direction,
     EvidenceRecord,
@@ -105,3 +108,21 @@ def test_sqlalchemy_repository_saves_and_lists_source_documents():
 
     assert repo.get_source_document("src_1") == document
     assert repo.list_source_documents() == [document]
+
+
+def test_sqlalchemy_repository_saves_and_lists_audit_events():
+    repo = repository()
+    audit_event = AuditEvent(
+        id="audit_1",
+        entity_type="spending_event",
+        entity_id="evt_1",
+        event_type=AuditEventType.IMPORT_CREATED,
+        actor=AuditActor.SYSTEM,
+        payload={"source_document_id": "src_1"},
+        created_at=NOW,
+    )
+
+    repo.save_audit_event(audit_event)
+
+    assert repo.list_audit_events() == [audit_event]
+    assert repo.list_audit_events(entity_id="evt_1") == [audit_event]

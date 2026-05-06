@@ -4,9 +4,10 @@ from sqlalchemy import func, select
 from sqlalchemy.orm import Session, sessionmaker
 
 from app.db import Base
-from app.domain import Category, EvidenceLink, EvidenceRecord, SourceDocument, SpendingEvent
+from app.domain import AuditEvent, Category, EvidenceLink, EvidenceRecord, SourceDocument, SpendingEvent
 from app.domain.models import MatchCandidate
 from app.orm import (
+    AuditEventRow,
     CategoryRow,
     EvidenceLinkRow,
     EvidenceRecordRow,
@@ -16,6 +17,8 @@ from app.orm import (
     SpendingEventRow,
 )
 from app.orm.mappers import (
+    audit_event_from_row,
+    audit_event_to_row,
     category_from_row,
     category_to_row,
     evidence_link_from_row,
@@ -100,6 +103,12 @@ class SqlAlchemyFinanceRepository:
             session.commit()
             return mapping_rule
 
+    def save_audit_event(self, audit_event: AuditEvent) -> AuditEvent:
+        with self.session_factory() as session:
+            session.merge(audit_event_to_row(audit_event))
+            session.commit()
+            return audit_event
+
     def get_spending_event(self, event_id: str) -> SpendingEvent | None:
         with self.session_factory() as session:
             row = session.get(SpendingEventRow, event_id)
@@ -159,6 +168,14 @@ class SqlAlchemyFinanceRepository:
             ).all()
             return [mapping_rule_from_row(row) for row in rows]
 
+    def list_audit_events(self, *, entity_id: str | None = None) -> list[AuditEvent]:
+        with self.session_factory() as session:
+            query = select(AuditEventRow).order_by(AuditEventRow.created_at)
+            if entity_id is not None:
+                query = query.where(AuditEventRow.entity_id == entity_id)
+            rows = session.scalars(query).all()
+            return [audit_event_from_row(row) for row in rows]
+
     def find_event_by_canonical_evidence_id(self, evidence_record_id: str) -> SpendingEvent | None:
         with self.session_factory() as session:
             row = session.scalars(
@@ -187,6 +204,7 @@ class SqlAlchemyFinanceRepository:
             "evidence_link": ("link", EvidenceLinkRow),
             "category": ("cat", CategoryRow),
             "mapping_rule": ("rule", MappingRuleRow),
+            "audit_event": ("audit", AuditEventRow),
         }
         prefix, row_type = mappings[entity_name]
         with self.session_factory() as session:

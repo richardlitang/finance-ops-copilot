@@ -1,10 +1,14 @@
 from datetime import datetime, timezone
 
 from app.domain import (
+    AuditActor,
+    AuditEvent,
+    AuditEventType,
     ConfirmationStatus,
     Direction,
     EvidenceType,
     LifecycleStatus,
+    ReviewReason,
     ReviewStatus,
     SourceQuality,
 )
@@ -14,6 +18,8 @@ from app.orm.mappers import (
     evidence_record_to_row,
     spending_event_from_row,
     spending_event_to_row,
+    audit_event_from_row,
+    audit_event_to_row,
 )
 
 
@@ -51,6 +57,7 @@ def test_spending_event_round_trips_status_dimensions():
         source_quality=SourceQuality.RECEIPT_ONLY,
         created_at=NOW,
         updated_at=NOW,
+        review_reasons=(ReviewReason.PARSE_WARNING,),
     )
 
     restored = spending_event_from_row(spending_event_to_row(event))
@@ -58,3 +65,22 @@ def test_spending_event_round_trips_status_dimensions():
     assert restored.confirmation_status is ConfirmationStatus.PROVISIONAL
     assert restored.review_status is ReviewStatus.NEEDS_REVIEW
     assert restored.lifecycle_status is LifecycleStatus.ACTIVE
+    assert restored.review_reasons == (ReviewReason.PARSE_WARNING,)
+
+
+def test_audit_event_round_trips_payload_json():
+    event = AuditEvent(
+        id="audit_1",
+        entity_type="spending_event",
+        entity_id="evt_1",
+        event_type=AuditEventType.IMPORT_CREATED,
+        actor=AuditActor.SYSTEM,
+        payload={"source_document_id": "src_1"},
+        created_at=NOW,
+    )
+
+    restored = audit_event_from_row(audit_event_to_row(event))
+
+    assert restored.event_type is AuditEventType.IMPORT_CREATED
+    assert restored.actor is AuditActor.SYSTEM
+    assert restored.payload == {"source_document_id": "src_1"}

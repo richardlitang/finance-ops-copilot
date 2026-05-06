@@ -78,6 +78,7 @@ def test_events_endpoint_lists_imported_receipt_event():
     assert len(body) == 1
     assert body[0]["merchant_normalized"] == "Aldi"
     assert body[0]["confirmation_status"] == "provisional"
+    assert body[0]["review_reasons"] == ["uncertain_category"]
 
 
 def test_event_detail_endpoint_returns_imported_event():
@@ -92,6 +93,7 @@ def test_event_detail_endpoint_returns_imported_event():
     assert response.status_code == 200
     assert response.json()["id"] == "evt_1"
     assert response.json()["merchant_normalized"] == "Aldi"
+    assert response.json()["review_reasons"] == ["uncertain_category"]
 
 
 def test_event_detail_endpoint_returns_404_for_missing_event():
@@ -134,6 +136,29 @@ def test_event_evidence_endpoint_returns_links_evidence_and_match_context():
         "exact_amount",
         "same_date",
     }
+    assert body["audit_events"][0]["event_type"] == "import_created"
+
+
+def test_event_audit_endpoint_returns_import_and_review_history():
+    client = TestClient(create_app())
+    client.post(
+        "/api/imports/receipt-text",
+        json={"raw_text": "ALDI\nDate: 17/04/2026\nTotal: €42,97 EUR"},
+    )
+    client.post("/api/categories", json={"name": "Groceries"})
+    client.post(
+        "/api/review/events/evt_1/category",
+        json={"category_id": "cat_1", "create_mapping_rule": True},
+    )
+
+    response = client.get("/api/events/evt_1/audit")
+
+    assert response.status_code == 200
+    event_types = [item["event_type"] for item in response.json()]
+    assert "import_created" in event_types
+    assert "review_routed" in event_types
+    assert "category_corrected" in event_types
+    assert "mapping_rule_created" in event_types
 
 
 def test_statement_csv_import_endpoint_confirms_matching_receipt_event():

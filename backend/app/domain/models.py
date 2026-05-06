@@ -2,14 +2,18 @@ from __future__ import annotations
 
 from dataclasses import dataclass, field, replace
 from datetime import datetime
+from typing import Any
 
 from .enums import (
+    AuditActor,
+    AuditEventType,
     ConfirmationStatus,
     Direction,
     EvidenceLinkStatus,
     EvidenceLinkType,
     EvidenceType,
     LifecycleStatus,
+    ReviewReason,
     ReviewStatus,
     SourceDocumentStatus,
     SourceQuality,
@@ -65,6 +69,7 @@ class SpendingEvent:
     posted_at: datetime | None = None
     category_id: str | None = None
     canonical_source_evidence_id: str | None = None
+    review_reasons: tuple[ReviewReason, ...] = field(default_factory=tuple)
 
     def with_updates(self, **changes: object) -> SpendingEvent:
         return replace(self, **changes)
@@ -96,4 +101,15 @@ class MatchCandidate:
 class Category:
     id: str
     name: str
+    created_at: datetime
+
+
+@dataclass(frozen=True, slots=True)
+class AuditEvent:
+    id: str
+    entity_type: str
+    entity_id: str
+    event_type: AuditEventType
+    actor: AuditActor
+    payload: dict[str, Any]
     created_at: datetime

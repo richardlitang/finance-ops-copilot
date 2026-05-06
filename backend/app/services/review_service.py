@@ -28,6 +28,7 @@ def confirm_receipt_as_manual(event: SpendingEvent, *, reviewed_at: datetime) ->
     return event.with_updates(
         confirmation_status=ConfirmationStatus.MANUAL_CONFIRMED,
         review_status=ReviewStatus.RESOLVED,
+        review_reasons=(),
         source_quality=SourceQuality.MANUAL,
         updated_at=reviewed_at,
     )
@@ -37,6 +38,7 @@ def mark_event_duplicate(event: SpendingEvent, *, reviewed_at: datetime) -> Spen
     return event.with_updates(
         lifecycle_status=LifecycleStatus.DUPLICATE,
         review_status=ReviewStatus.RESOLVED,
+        review_reasons=(),
         updated_at=reviewed_at,
     )
 
@@ -45,6 +47,7 @@ def ignore_event(event: SpendingEvent, *, reviewed_at: datetime) -> SpendingEven
     return event.with_updates(
         lifecycle_status=LifecycleStatus.IGNORED,
         review_status=ReviewStatus.RESOLVED,
+        review_reasons=(),
         updated_at=reviewed_at,
     )
 

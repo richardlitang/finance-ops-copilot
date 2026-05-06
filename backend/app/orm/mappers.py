@@ -1,8 +1,12 @@
 from __future__ import annotations
 
 from datetime import datetime, timezone
+import json
 
 from app.domain import (
+    AuditActor,
+    AuditEvent,
+    AuditEventType,
     ConfirmationStatus,
     Category,
     Direction,
@@ -12,6 +16,7 @@ from app.domain import (
     EvidenceRecord,
     EvidenceType,
     LifecycleStatus,
+    ReviewReason,
     ReviewStatus,
     SourceDocument,
     SourceDocumentStatus,
@@ -23,6 +28,7 @@ from app.domain.models import MatchCandidate
 from app.services.categorization import MappingRule, PatternType
 
 from .models import (
+    AuditEventRow,
     CategoryRow,
     EvidenceLinkRow,
     EvidenceRecordRow,
@@ -111,6 +117,7 @@ def spending_event_to_row(value: SpendingEvent) -> SpendingEventRow:
         category_id=value.category_id,
         confirmation_status=value.confirmation_status.value,
         review_status=value.review_status.value,
+        review_reasons="\n".join(reason.value for reason in value.review_reasons),
         lifecycle_status=value.lifecycle_status.value,
         source_quality=value.source_quality.value,
         canonical_source_evidence_id=value.canonical_source_evidence_id,
@@ -131,6 +138,7 @@ def spending_event_from_row(row: SpendingEventRow) -> SpendingEvent:
         category_id=row.category_id,
         confirmation_status=ConfirmationStatus(row.confirmation_status),
         review_status=ReviewStatus(row.review_status),
+        review_reasons=tuple(ReviewReason(item) for item in row.review_reasons.splitlines() if item),
         lifecycle_status=LifecycleStatus(row.lifecycle_status),
         source_quality=SourceQuality(row.source_quality),
         canonical_source_evidence_id=row.canonical_source_evidence_id,
@@ -215,6 +223,30 @@ def mapping_rule_from_row(row: MappingRuleRow) -> MappingRule:
         category_id=row.category_id,
         priority=row.priority,
         created_from_review=bool(row.created_from_review),
+        created_at=_utc(row.created_at),
+    )
+
+
+def audit_event_to_row(value: AuditEvent) -> AuditEventRow:
+    return AuditEventRow(
+        id=value.id,
+        entity_type=value.entity_type,
+        entity_id=value.entity_id,
+        event_type=value.event_type.value,
+        actor=value.actor.value,
+        payload_json=json.dumps(value.payload, sort_keys=True),
+        created_at=value.created_at,
+    )
+
+
+def audit_event_from_row(row: AuditEventRow) -> AuditEvent:
+    return AuditEvent(
+        id=row.id,
+        entity_type=row.entity_type,
+        entity_id=row.entity_id,
+        event_type=AuditEventType(row.event_type),
+        actor=AuditActor(row.actor),
+        payload=json.loads(row.payload_json),
         created_at=_utc(row.created_at),
     )
 
